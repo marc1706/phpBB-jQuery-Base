@@ -25,6 +25,7 @@ class phpbb_jquery_base
 	var $mode;
 	var $post_id;
 	var $location;
+	var $forum_id;
 	var $submit = false;
 	var $load_tpl = false;
 	var $return = array();
@@ -45,6 +46,22 @@ class phpbb_jquery_base
 		$this->mode = request_var('mode', '');
 		$this->location = request_var('location', '');
 		$this->submit = request_var('submit', false);
+
+		// provide a valid location (need for some functions)
+		$this->location = utf8_normalize_nfc(request_var('location', '', true));
+		$this->forum_id = strstr($this->location, 'f=');
+		$first_loc = strpos($this->forum_id, '&');
+		$this->forum_id = ($first_loc) ? substr($this->forum_id, 2, $first_loc) : substr($this->forum_id, 2);
+		$this->forum_id = (int) $this->forum_id; // make sure it's an int
+		
+		/* 
+		* if somebody previews a style using the style URL parameter, we need to do this
+		* @todo: find out if this is enough
+		*/
+		if($this->forum_id < 1)
+		{
+			$this->forum_id = request_var('f', 0);
+		}
 		
 		// include needed files
 		switch($this->mode)
@@ -56,6 +73,9 @@ class phpbb_jquery_base
 			break;
 			case 'markread_forum':
 				// check what files we need
+			break;
+			case 'markread_all':
+				// same as above
 			break;
 			default:
 				$error[] = array('error' => 'NO_MODE', 'action' => 'cancel');
@@ -125,13 +145,18 @@ class phpbb_jquery_base
 	*/
 	function quickedit()
 	{
+		global $db, $config, $auth;
+
 		// the first post is 1, so any post_id below 1 isn't possible
 		if($this->$post_id < 1)
 		{
-			$error[] = $user->lang['NO_MODE'];
-			$qe_action = 'cancel';
+			$this->error[] = array('error' => $user->lang['NO_MODE'], 'action' => 'cancel');
 			$mode = '';
-			$assign_template = true;
+			//$this->tpl_load = false; // page_footer already does this
+		}
+		else
+		{
+			$qe_mode = request_var('qe_mode', '');
 		}
 
 		switch($mode)
@@ -139,7 +164,7 @@ class phpbb_jquery_base
 			case 'init':
 				$sql = 'SELECT p.*, f.*, t.*
 						FROM ' . POSTS_TABLE . ' p, ' . TOPICS_TABLE . ' t, ' . FORUMS_TABLE . ' f
-						WHERE p.post_id = ' . (int)$post_id . ' AND p.topic_id = t.topic_id';	
+						WHERE p.post_id = ' . (int) $this->post_id . ' AND p.topic_id = t.topic_id';	
 				$result = $db->sql_query($sql);
 				$row = $db->sql_fetchrow($result);
 				$db->sql_freeresult($result);
@@ -147,18 +172,7 @@ class phpbb_jquery_base
 				// Give a valid forum_id for image, smilies, etc. status
 				if(!isset($row['forum_id']) || $row['forum_id'] <= 0)
 				{
-					$location = utf8_normalize_nfc(request_var('location', '', true));
-					$location = strstr($location, 'f=');
-					$first_loc = strpos($location, '&');
-					$location = ($first_loc) ? substr($location, 2, $first_loc) : substr($location, 2);
-					$forum_id = (int) $location; // don't remove (int)
-					
-					// if somebody previews a style using the style URL parameter, we need to do this
-					if($forum_id < 1)
-					{
-						$location = request_var('f', 0);
-						$forum_id = (int) $location;
-					}
+					$forum_id = $this->forum_id;
 				}
 				else
 				{
@@ -176,23 +190,20 @@ class phpbb_jquery_base
 				// check if the user is registered and if he is able to edit posts
 				if (!$user->data['is_registered'] && !$auth->acl_gets('f_edit', 'm_edit', $forum_id))
 				{
-					$qe_error = $user->lang['USER_CANNOT_EDIT'];
-					$qe_action = 'cancel';
+					$this->error[] = array('error' => $user->lang['USER_CANNOT_EDIT'], 'action' => 'cancel');
 				}
 				
-				if ($row['forum_status'] == ITEM_LOCKED)
+				if ($row['forum_status'] === ITEM_LOCKED)
 				{
 					// forum locked
-					$qe_error = $user->lang['FORUM_LOCKED'];
-					$qe_action = 'cancel';
+					$this->error[] = array('error' => $user->lang['FORUM_LOCKED'], 'action' => 'cancel');
 				}
-				elseif ((isset($row['topic_status']) && $row['topic_status'] == ITEM_LOCKED) && !$auth->acl_get('m_edit', $forum_id))
+				elseif ((isset($row['topic_status']) && $row['topic_status'] === ITEM_LOCKED) && !$auth->acl_get('m_edit', $forum_id))
 				{
 					// topic locked
-					$qe_error = $user->lang['TOPIC_LOCKED'];
-					$qe_action = 'cancel';
+					$this->error[] = array('error' => $user->lang['TOPIC_LOCKED'], 'action' => 'cancel');
 				}
-				
+				// @todo: start working from here
 				// check if the user is allowed to edit the selected post
 				if (!$auth->acl_get('m_edit', $forum_id))
 				{
