@@ -207,7 +207,7 @@ class phpbb_jquery_base
 			$qe_mode = request_var('qe_mode', '');
 		}
 
-		switch($mode)
+		switch($qe_mode)
 		{
 			case 'init':
 				$sql = 'SELECT p.*, f.*, t.*
@@ -282,17 +282,15 @@ class phpbb_jquery_base
 				display_custom_bbcodes();
 				
 				// Assign important template vars
-				$return_ary = array(
-					'POST_TEXT'   			=> ($qe_action != '') ? '' : $text['text'], // Don't show the text if there was a permission error
+				$template->assign_vars(array(
+					'POST_TEXT'   			=> (!empty($this->error)) ? '' : $text['text'], // Don't show the text if there was a permission error
 					'S_LINKS_ALLOWED'       => $url_status,
 					'S_BBCODE_IMG'          => $img_status,
 					'S_BBCODE_FLASH'		=> $flash_status,
 					'S_BBCODE_QUOTE'		=> $quote_status,
 					'S_BBCODE_ALLOWED'		=> $bbcode_status,
 					'MAX_FONT_SIZE'			=> (int) $config['max_post_font_size'],
-				);
-				
-				$this->add_return($return_ary);
+				));
 				
 				$this->load_tpl = true;
 			break;
@@ -620,11 +618,7 @@ class phpbb_jquery_base
 						$l_edited_by = '0';
 					}
 				
-					/* 
-					* {/qe_seperator} seperates the values for javascript
-					* qe_error{/qe_seperator}qe_action{/qe_seperator}edited_by_info{/qe_seperator}message
-					* since qe_error is empty, qe_action is also set to empty in the return variable
-					*/
+
 					$this->add_return(array(
 						'EDITED_BY'	=> $l_edited_by,
 						'TEXT'		=> $text,
@@ -665,21 +659,18 @@ class phpbb_jquery_base
 				// check if the user is registered and if he is able to edit posts
 				if (!$user->data['is_registered'] && !$auth->acl_gets('f_edit', 'm_edit', $row['forum_id']))
 				{
-					$qe_error = $user->lang['USER_CANNOT_EDIT'];
-					$qe_action = 'cancel';
+					$this->error[] = array('error' => $user->lang['USER_CANNOT_EDIT'], 'action' => 'cancel');
 				}
 				
-				if ($row['forum_status'] == ITEM_LOCKED)
+				if ($row['forum_status'] === ITEM_LOCKED)
 				{
 					// forum locked
-					$qe_error = $user->lang['FORUM_LOCKED'];
-					$qe_action = 'cancel';
+					$this->error[] = array('error' => $user->lang['FORUM_LOCKED'], 'action' => 'cancel');
 				}
-				elseif ((isset($row['topic_status']) && $row['topic_status'] == ITEM_LOCKED) && !$auth->acl_get('m_edit', $row['forum_id']))
+				elseif ((isset($row['topic_status']) && $row['topic_status'] === ITEM_LOCKED) && !$auth->acl_get('m_edit', $row['forum_id']))
 				{
 					// topic locked
-					$qe_error = $user->lang['TOPIC_LOCKED'];
-					$qe_action = 'cancel';
+					$this->error[] = array('error' => $user->lang['TOPIC_LOCKED'], 'action' => 'cancel');
 				}
 				
 				// check if the user is allowed to edit the selected post
@@ -688,22 +679,19 @@ class phpbb_jquery_base
 					if ($user->data['user_id'] != $row['poster_id'])
 					{
 						// user is not allowed to edit this post
-						$qe_error = $user->lang['USER_CANNOT_EDIT'];
-						$qe_action = 'cancel';
+						$this->error[] = array('error' => $user->lang['USER_CANNOT_EDIT'], 'action' => 'cancel');
 					}
 				
 					if (($row['post_time'] < time() - ($config['edit_time'] * 60)) && $config['edit_time'] > 0)
 					{
 						// user can no longer edit the post (exceeded edit time)
-						$qe_error = $user->lang['CANNOT_EDIT_TIME'];
-						$qe_action = 'cancel';
+						$this->error[] = array('error' => $user->lang['CANNOT_EDIT_TIME'], 'action' => 'cancel');
 					}
 				
 					if ($row['post_edit_locked'])
 					{
 						// post has been locked in order to prevent editing
-						$qe_error = $user->lang['CANNOT_EDIT_POST_LOCKED'];
-						$qe_action = 'cancel';
+						$this->error[] = array('error' => $user->lang['CANNOT_EDIT_POST_LOCKED'], 'action' => 'cancel');
 					}
 				}
 				
@@ -735,22 +723,11 @@ class phpbb_jquery_base
 					$message_parser->attachment_data = array_merge($message_parser->attachment_data, $db->sql_fetchrowset($result));
 					$db->sql_freeresult($result);
 				}
-				
+
 				// Give a valid forum_id for image, smilies, etc. status
 				if(!isset($row['forum_id']) || $row['forum_id'] <= 0)
 				{
-					$location = utf8_normalize_nfc(request_var('location', '', true));
-					$location = strstr($location, 'f=');
-					$first_loc = strpos($location, '&');
-					$location = ($first_loc) ? substr($location, 2, $first_loc) : substr($location, 2);
-					$forum_id = (int) $location; // don't remove (int)
-					
-					// if somebody previews a style using the style URL parameter, we need to do this
-					if($forum_id < 1)
-					{
-						$location = request_var('f', 0);
-						$forum_id = (int) $location;
-					}
+					$forum_id = $this->forum_id;
 				}
 				else
 				{
@@ -758,7 +735,7 @@ class phpbb_jquery_base
 				}
 				
 				// Why should we waste any time if we already have an error?
-				if($qe_error == '')
+				if(!empty($this->error))
 				{
 					$s_hidden_fields = '<input type="hidden" name="lastclick" value="' . time() . '" />';
 					$s_hidden_fields .= build_hidden_fields(array(
@@ -781,7 +758,7 @@ class phpbb_jquery_base
 				
 				// Assign important template vars
 				$template->assign_vars(array(
-					'POST_TEXT'   			=> ($qe_action != '') ? '' : $post_text, // Don't show the text if there was a permission error
+					'POST_TEXT'   			=> (!empty($this->error)) ? '' : $post_text, // Don't show the text if there was a permission error
 					'S_LINKS_ALLOWED'       => $url_status,
 					'S_BBCODE_IMG'          => $img_status,
 					'S_BBCODE_FLASH'		=> $flash_status,
@@ -789,7 +766,7 @@ class phpbb_jquery_base
 					'S_BBCODE_ALLOWED'		=> $bbcode_status,
 					'MAX_FONT_SIZE'			=> (int) $config['max_post_font_size'],
 				));
-				$assign_template = true;
+				$this->tpl_load = true;
 			
 			break;
 			
