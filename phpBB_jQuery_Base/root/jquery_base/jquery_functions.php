@@ -68,8 +68,8 @@ class phpbb_jquery_base
 		{
 			case 'quickreply':
 			case 'quickedit':
-				include($phpbb_root_path . 'includes/functions_display.' . $phpEx);
-				include($phpbb_root_path . 'includes/message_parser.' . $phpEx);
+				$this->include_file('includes/functions_display', 'display_forums');
+				$this->include_file('includes/message_parser', 'bbcode_firstpass', true);
 			break;
 			case 'markread_forum':
 				// check what files we need
@@ -139,13 +139,61 @@ class phpbb_jquery_base
 	}
 	
 	
+
+	/*
+	* include a file if its functions or class does not exist yet
+	* always use this function for including files
+	* 
+	* @param <string> $file The path to the file that needs to be included (relative to the phpbb root path & just the filename, i.e. 'index' for index.php)
+	* @param <string> $check The function or class that shouldn't exist if the file hasn't been included yet
+	* @param <bool> $class Set to true if you would like to check for a class and false if you would like to check for a function
+	*/
+	function include_file($file, $check, $class = false)
+	{
+		global $phpbb_root_path, $phpEx;
+		
+		if($class)
+		{
+			if(!class_exists($check))
+			{
+				include($phpbb_root_path . $file . '.' . $phpEx);
+			}
+		}
+		else
+		{
+			if(!function_exists($check_function))
+			{
+				include($phpbb_root_path . $file . '.' . $phpEx);
+			}
+		}
+	}
+
+
+	/* 
+	* Add variables or arrays to the JSON return array
+	* 
+	* @param: <array> $return_ary The array of variables -- the array needs to be structured like: array('varname' => 'value')
+	* @param: <bool> $force Set to true if you want to overwrite already existing values
+	*/
+	function add_return($return_ary, $force = false)
+	{
+		foreach($return_ary as $key => $value)
+		{
+			if(!isset($this->return_ary[$key]) || $force)
+			{
+				$this->return_ary[$key] = $value;
+			}
+		}
+	}
+
+
 	/*
 	* Quickedit posts
 	* @param none
 	*/
 	function quickedit()
 	{
-		global $db, $config, $auth;
+		global $db, $config, $auth, $template;
 
 		// the first post is 1, so any post_id below 1 isn't possible
 		if($this->$post_id < 1)
@@ -210,22 +258,19 @@ class phpbb_jquery_base
 					if ($user->data['user_id'] != $row['poster_id'])
 					{
 						// user is not allowed to edit this post
-						$qe_error = $user->lang['USER_CANNOT_EDIT'];
-						$qe_action = 'cancel';
+						$this->error[] = array('error' => $user->lang['USER_CANNOT_EDIT'], 'action' => 'cancel');
 					}
 				
 					if (($row['post_time'] < time() - ($config['edit_time'] * 60)) && $config['edit_time'] > 0)
 					{
 						// user can no longer edit the post (exceeded edit time)
-						$qe_error = $user->lang['CANNOT_EDIT_TIME'];
-						$qe_action = 'cancel';
+						$this->error[] = array('error' => $user->lang['CANNOT_EDIT_TIME'], 'action' => 'cancel');
 					}
 				
 					if ($row['post_edit_locked'])
 					{
 						// post has been locked in order to prevent editing
-						$qe_error = $user->lang['CANNOT_EDIT_POST_LOCKED'];
-						$qe_action = 'cancel';
+						$this->error[] = array('error' => $user->lang['CANNOT_EDIT_POST_LOCKED'], 'action' => 'cancel');
 					}
 				}
 				
@@ -237,7 +282,7 @@ class phpbb_jquery_base
 				display_custom_bbcodes();
 				
 				// Assign important template vars
-				$template->assign_vars(array(
+				$return_ary = array(
 					'POST_TEXT'   			=> ($qe_action != '') ? '' : $text['text'], // Don't show the text if there was a permission error
 					'S_LINKS_ALLOWED'       => $url_status,
 					'S_BBCODE_IMG'          => $img_status,
@@ -245,8 +290,11 @@ class phpbb_jquery_base
 					'S_BBCODE_QUOTE'		=> $quote_status,
 					'S_BBCODE_ALLOWED'		=> $bbcode_status,
 					'MAX_FONT_SIZE'			=> (int) $config['max_post_font_size'],
-				));
-				$assign_template = true;
+				);
+				
+				$this->add_return($return_ary);
+				
+				$this->load_tpl = true;
 			break;
 			
 			case 'submit':
@@ -254,10 +302,7 @@ class phpbb_jquery_base
 				* only include functions_posting if we actually need it
 				* make sure we don't include it if it already has been included by some other MOD
 				*/
-				if(!function_exists('submit_post'))
-				{
-				  include($phpbb_root_path . 'includes/functions_posting.' . $phpEx);
-				}
+				$this->include_file('includes/functions_posting', 'submit_post');
 
 				$sql = 'SELECT p.*, f.*, t.*, u.*, p.icon_id AS post_icon_id
 						FROM ' . POSTS_TABLE . ' p, ' . TOPICS_TABLE . ' t, ' . FORUMS_TABLE . ' f, ' . USERS_TABLE . ' u
@@ -267,24 +312,13 @@ class phpbb_jquery_base
 				$result = $db->sql_query($sql);
 				$post_data = $db->sql_fetchrow($result);
 				$db->sql_freeresult($result);
-				
+
 				// Give a valid forum_id for image, smilies, etc. status
 				if(!isset($post_data['forum_id']) || $post_data['forum_id'] <= 0)
 				{
-					$location = utf8_normalize_nfc(request_var('location', '', true));
-					$location = strstr($location, 'f=');
-					$first_loc = strpos($location, '&');
-					$location = ($first_loc) ? substr($location, 2, $first_loc) : substr($location, 2);
-					$post_data['forum_id'] = (int) $location; // don't remove (int)
-					
-					// if somebody previews a style using the style URL parameter the above might not work, so we check it again
-					if($post_data['forum_id'] < 1)
-					{
-						$location = request_var('f', 0);
-						$post_data['forum_id'] = (int) $location;
-					}
+					$post_data['forum_id'] = $this->forum_id;
 				}
-				
+
 				// HTML, BBCode, Smilies, Images and Flash status
 				$bbcode_status	= ($config['allow_bbcode'] && ($auth->acl_get('f_bbcode', $post_data['forum_id']) || $post_data['forum_id'] == 0) && $post_data['enable_bbcode']) ? true : false;
 				$smilies_status	= ($bbcode_status && $config['allow_smilies'] && $auth->acl_get('f_smilies', $post_data['forum_id']) && $post_data['enable_smilies']) ? true : false;
@@ -296,21 +330,18 @@ class phpbb_jquery_base
 				// check if the user is registered and if he is able to edit posts
 				if (!$user->data['is_registered'] && !$auth->acl_gets('f_edit', 'm_edit', $post_data['forum_id']))
 				{
-					$qe_error = $user->lang['USER_CANNOT_EDIT'];
-					$qe_action = 'cancel';
+					$this->error[] = array('error' => $user->lang['USER_CANNOT_EDIT'], 'action' => 'cancel');
 				}
 				
-				if ($post_data['forum_status'] == ITEM_LOCKED)
+				if ($post_data['forum_status'] === ITEM_LOCKED)
 				{
 					// forum locked
-					$qe_error = $user->lang['FORUM_LOCKED'];
-					$qe_action = 'cancel';
+					$this->error[] = array('error' => $user->lang['FORUM_LOCKED'], 'action' => 'cancel');
 				}
-				elseif ((isset($post_data['topic_status']) && $post_data['topic_status'] == ITEM_LOCKED) && !$auth->acl_get('m_edit', $post_data['forum_id']))
+				elseif ((isset($post_data['topic_status']) && $post_data['topic_status'] === ITEM_LOCKED) && !$auth->acl_get('m_edit', $post_data['forum_id']))
 				{
 					// topic locked
-					$qe_error = $user->lang['TOPIC_LOCKED'];
-					$qe_action = 'cancel';
+					$this->error[] = array('error' => $user->lang['TOPIC_LOCKED'], 'action' => 'cancel');
 				}
 				
 				// check if the user is allowed to edit the selected post
@@ -319,22 +350,19 @@ class phpbb_jquery_base
 					if ($user->data['user_id'] != $post_data['poster_id'])
 					{
 						// user is not allowed to edit this post
-						$qe_error = $user->lang['USER_CANNOT_EDIT'];
-						$qe_action = 'cancel';
+						$this->error[] = array('error' => $user->lang['USER_CANNOT_EDIT'], 'action' => 'cancel');
 					}
 				
 					if (($post_data['post_time'] < time() - ($config['edit_time'] * 60)) && $config['edit_time'] > 0)
 					{
 						// user can no longer edit the post (exceeded edit time)
-						$qe_error = $user->lang['CANNOT_EDIT_TIME'];
-						$qe_action = 'cancel';
+						$this->error[] = array('error' => $user->lang['CANNOT_EDIT_TIME'], 'action' => 'cancel');
 					}
 				
 					if ($post_data['post_edit_locked'])
 					{
 						// post has been locked in order to prevent editing
-						$qe_error = $user->lang['CANNOT_EDIT_POST_LOCKED'];
-						$qe_action = 'cancel';
+						$this->error[] = array('error' => $user->lang['CANNOT_EDIT_POST_LOCKED'], 'action' => 'cancel');
 					}
 				}
 				
@@ -497,13 +525,15 @@ class phpbb_jquery_base
 					$message_parser->attachment_data = array_merge($message_parser->attachment_data, $db->sql_fetchrowset($result));
 					$db->sql_freeresult($result);
 				}
-				
-				$qe_error .= implode('<br />', $message_parser->warn_msg);
-				$qe_action = (strlen($qe_action) > 0) ? $qe_action : 'return'; // don't overwrite already existing qe_action
+
+				foreach($message_parser->warn_msg as $cur_error)
+				{
+					$this->error[] = array('error' => $cur_error, 'action' => 'return'); // by default we have a return error
+				}
 				
 				
 				// Don't execute all that if we already have errors
-				if($qe_error == '')
+				if(!empty($message_parser->warn_msg))
 				{
 					/**
 					* Start parsing the message for displaying the post
@@ -595,24 +625,17 @@ class phpbb_jquery_base
 					* qe_error{/qe_seperator}qe_action{/qe_seperator}edited_by_info{/qe_seperator}message
 					* since qe_error is empty, qe_action is also set to empty in the return variable
 					*/
-					$return = "0{/qe_seperator}0{/qe_seperator}$l_edited_by{/qe_seperator}$text"; 
+					$this->add_return(array(
+						'EDITED_BY'	=> $l_edited_by,
+						'TEXT'		=> $text,
+					));
+					$this->load_tpl = false;
 					/* 
 					* Don't run submit_post before we checked for errors
 					* $mode is always edit as we just edit a post with this MOD
 					* $username is set to $user->data['username'] as we don't need the clean username for the logs
 					*/
 					submit_post('edit', $post_data['post_subject'], $post_data['username'], $post_data['topic_type'], $poll, $data);
-					echo($return); // this is needed in order to send the info back to the javascript backend
-				}
-				else
-				{
-					/* 
-					* {/qe_seperator} seperates the values for javascript
-					* qe_error{/qe_seperator}qe_action{/qe_seperator}edited_by_info{/qe_seperator}message
-					* since we have an error, both the message and edited_by_info are set to 0 since we don't need that
-					*/
-					$return = "$qe_error{/qe_seperator}$qe_action{/qe_seperator}0{/qe_seperator}0";
-					echo($return); // this is needed in order to send the info back to the javascript backend
 				}
 				
 			break;
@@ -791,8 +814,6 @@ class phpbb_jquery_base
 	{
 	
 	}
-
-
 }
 
 ?>
