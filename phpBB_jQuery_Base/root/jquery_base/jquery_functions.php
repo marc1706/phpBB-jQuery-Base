@@ -123,7 +123,7 @@ class phpbb_jquery_base
 	* Quickedit posts
 	* @param none
 	*/
-	function quickreply()
+	function quickedit()
 	{
 		// the first post is 1, so any post_id below 1 isn't possible
 		if($this->$post_id < 1)
@@ -764,9 +764,9 @@ class phpbb_jquery_base
 	}
 
 	/*
-	*
+	* Quickly reply to posts
 	*/
-	function quickedit()
+	function quickreply()
 	{
 	
 	}
