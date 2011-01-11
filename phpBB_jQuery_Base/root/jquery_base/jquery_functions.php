@@ -95,10 +95,10 @@ class phpbb_jquery_base
 			switch($this->mode)
 			{
 				case 'quickreply':
-					$this->quickreply;
+					$this->quickreply();
 				break;
 				case 'quickedit':
-					$this->quickedit;
+					$this->quickedit();
 				break;
 				case 'markread_forum':
 					$this->mark_read('forum');
@@ -131,11 +131,14 @@ class phpbb_jquery_base
 				$this->return['error'][] = $cur_error['error'];
 			}
 		}
-
-		$template->set_filenames(array(
-					'body' => 'quickedit/quickedit.html')
-				);
-		page_footer();
+		
+		if($this->load_tpl)
+		{
+			$template->set_filenames(array(
+						'body' => $this->tpl_file)
+					);
+			page_footer();
+		}
 	}
 	
 	
@@ -161,7 +164,7 @@ class phpbb_jquery_base
 		}
 		else
 		{
-			if(!function_exists($check_function))
+			if(!function_exists($check))
 			{
 				include($phpbb_root_path . $file . '.' . $phpEx);
 			}
@@ -193,10 +196,10 @@ class phpbb_jquery_base
 	*/
 	function quickedit()
 	{
-		global $db, $config, $auth, $template;
+		global $db, $config, $auth, $template, $user;
 
 		// the first post is 1, so any post_id below 1 isn't possible
-		if($this->$post_id < 1)
+		if($this->post_id < 1)
 		{
 			$this->error[] = array('error' => $user->lang['NO_MODE'], 'action' => 'cancel');
 			$mode = '';
@@ -293,6 +296,8 @@ class phpbb_jquery_base
 				));
 				
 				$this->load_tpl = true;
+
+				$this->tpl_file = 'jquery_base/quickedit.html';
 			break;
 			
 			case 'submit':
@@ -304,7 +309,7 @@ class phpbb_jquery_base
 
 				$sql = 'SELECT p.*, f.*, t.*, u.*, p.icon_id AS post_icon_id
 						FROM ' . POSTS_TABLE . ' p, ' . TOPICS_TABLE . ' t, ' . FORUMS_TABLE . ' f, ' . USERS_TABLE . ' u
-						WHERE p.post_id = ' . (int)$post_id . ' 
+						WHERE p.post_id = ' . (int) $this->post_id . ' 
 							AND p.topic_id = t.topic_id
 							AND p.poster_id = u.user_id';	
 				$result = $db->sql_query($sql);
