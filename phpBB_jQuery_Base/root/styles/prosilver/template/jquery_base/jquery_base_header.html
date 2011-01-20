@@ -40,30 +40,30 @@ $(document).ready(function(){
 			qe_loadPopup();
 			cur_location = $(location).attr('href');
 			data = 'mode=quickedit&qe_mode=init&post_id=' + post_id + '&location=' + location;
-			qe_do_ajax('open', data);
+			qe_do_ajax('open', data, false);
 			popup_open = true;
 			cur_post_id = post_id;
 		}
 	});
 	
 	// mark forums read
-	$('li.rightside').click(function() {
-		if($(this).attr('accesskey') == 'm')
-		{
-			cur_location = $(location).attr('href');
-			data = 'mode=markread_forums&location=' + location;
-			qe_do_ajax('mark_read', data);
-			popup_open = true;
-		}
+	$('a.markread').click(function() {
+		alert('in');
+		cur_location = $(location).attr('href');
+		data = 'mode=markread_forums&location=' + location;
+		qe_do_ajax('mark_read', data, true);
+		popup_open = true;
+		return false;
 	});
 	
 	// mark topics read
-	$('div.pagination a').click(function() {
+	$('div.pagination a.markread_topics').click(function() {
 		if($(this).attr('accesskey') == 'm')
 		{
+			return false;
 			cur_location = $(location).attr('href');
 			data = 'mode=markread_topics&location=' + location;
-			qe_do_ajax('mark_read', data);
+			qe_do_ajax('mark_read', data, true);
 			popup_open = true;
 		}
 	});
@@ -199,7 +199,7 @@ function bind_quickedit_buttons()
 			content = content.substring(8); // make sure we get rid of the 'message=' in front of the post text
 			cur_location = $(location).attr('href');
 			data = 'mode=quickedit&qe_mode=submit&post_id=' + post_id + '&contents=' + content + '&location=' + location;
-			qe_do_ajax('submit', data);
+			qe_do_ajax('submit', data, true);
 		}
 	});
 	
@@ -222,7 +222,7 @@ function bind_quickedit_buttons()
 			content = $('textarea#jqe-message').serialize();
 			content = content.substring(8); // make sure we get rid of the 'message=' in front of the post text
 			data = 'mode=quickedit&qe_mode=advanced_edit&post_id=' + post_id + '&contents=' + content + '&location=' + location;
-			qe_do_ajax('advanced_edit', data);
+			qe_do_ajax('advanced_edit', data, true);
 			return false;
 		}
 	});
@@ -306,27 +306,51 @@ function advanced_edit(success)
 	}
 }
 
-// general AJAX function
-function qe_do_ajax(mode, data)
+// mark_read
+function mark_read(success)
 {
+	if(success['MARK_REDIRECT'])
+	{   
+		$(location).attr('href', success['MARK_REDIRECT']);
+	}
+	else
+	{
+		alert('bullshit');
+	}
+}
+
+// general AJAX function
+function qe_do_ajax(mode, data, use_json)
+{
+	if(use_json)
+	{
+		var datatype = 'json';
+	}
+	else
+	{
+		var datatype = 'html';
+	}
 	$.ajax({
 		type: 'POST',
 		data: data,
-		dataType: 'html',
-		url: 'jquery_base.php',
+		dataType: datatype,
+		url: '{U_JQUERY_BASE}',
 		success: function(data){
-			if(mode == 'open')
+			switch(mode)
 			{
-				$('#quickeditError').html('');
-				open_edit(data);
-			}
-			else if(mode == 'submit')
-			{
-				submit_edit(data);
-			}
-			else if(mode == 'advanced_edit')
-			{
-				advanced_edit(data);
+				case 'open':
+					$('#quickeditError').html('');
+					open_edit(data);
+				break;
+				case 'submit':
+					submit_edit(data);
+				break;
+				case 'advanced_edit':
+					advanced_edit(data);
+				break;
+				case 'mark_read':
+					mark_read(data);
+				break;
 			}
 		}
 	});

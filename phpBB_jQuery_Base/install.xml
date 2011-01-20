@@ -5,8 +5,8 @@
 	<header>
 		<meta name="generator" content="MODX file generated with PP MODX Creator by tumba25 (online version)"/>
 		<license><![CDATA[http://opensource.org/licenses/gpl-license.php GNU General Public License v2]]></license>
-		<title lang="en"><![CDATA[phpBB jQuery Base]]></title>
-		<description lang="en"><![CDATA[soon you will now .... ]]></description>
+		<title lang="en"><![CDATA[jQuery Quick Edit]]></title>
+		<description lang="en"><![CDATA[Edit posts quickly without reloading the page.]]></description>
 		<author-group>
 			<author>
 				<realname><![CDATA[Marc Alexander]]></realname>
@@ -15,25 +15,29 @@
 				<email><![CDATA[admin@m-a-styles.de]]></email>
 			</author>
 		</author-group>
-		<mod-version>0.0.1-dev</mod-version>
+		<mod-version>1.0.1</mod-version>
 		<installation>
 			<level>easy</level>
 			<time>300</time>
 			<target-version>3.0.8</target-version>
 		</installation>
+		<!--
 		<link-group>
-			<link type="template" href="contrib/subsilver2.xml" lang="en">Subsilver2 Instructions</link>
-			<link type="template" href="contrib/subsilver2.xml" lang="de">Subsilver2 Anleitung</link>
+			<link type="contrib" href="contrib/Prime_Post_Revisions.xml" lang="en">Prime Post Revisions Add-On</link>
+			<link type="contrib" href="contrib/Prime_Post_Revisions.xml" lang="de">Prime Post Revisions Add-On</link>
+			<link type="language" href="contrib/de.xml" lang="en">German Language</link>
+			<link type="language" href="contrib/de.xml" lang="de">Deutsche Sprache</link>
 		</link-group>
+		-->
 		<history>
 			<entry>
-				<date>2011-02-01</date>
+				<date>2010-08-23</date>
 				<rev-version>0.0.1</rev-version>
 				<changelog lang="en">
-					<change>nope</change>
+					<change>First alpha</change>
 				</changelog>
 				<changelog lang="de">
-					<change>muh</change>
+					<change>Erste Alpha</change>
 				</changelog>
 			</entry>
 		</history>
@@ -44,8 +48,112 @@
 		</copy>
 		<open src="includes/acp/acp_styles.php">
 			<edit>
-				<find><![CDATA[]]></find>
-				<action type="add-after">Weeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee ......</action>
+				<find><![CDATA[ 'button_topic_reply',]]></find>
+				<inline-edit>
+					<inline-find><![CDATA[ 'button_topic_reply',]]></inline-find>
+					<inline-action type="after-add"><![CDATA[ 'icon_post_quickedit',]]></inline-action>
+				</inline-edit>
+			</edit>
+		</open>
+		<open src="includes/functions.php">
+			<edit>
+				<find><![CDATA['U_PRIVATEMSGS'			=> append_sid("{$phpbb_root_path}ucp.$phpEx", 'i=pm&amp;folder=inbox'),]]></find>
+				<action type="before-add"><![CDATA[		'U_JQUERY_BASE'				=> append_sid("{$phpbb_root_path}jquery_base.$phpEx"),]]></action>
+			</edit>	
+		</open>
+		<open src="language/en/acp/styles.php">
+			<edit>
+				<find><![CDATA[	'IMG_ICON_POST_EDIT'			=> 'Edit post',]]></find>
+				<action type="after-add"><![CDATA[	'IMG_ICON_POST_QUICKEDIT'		=> 'Quickedit post',]]></action>
+			</edit>
+		</open>
+		<open src="language/en/common.php">
+			<edit>
+				<find><![CDATA[	'YOU_NO_NEW_PM'		=> 'No new private messages are waiting for you.',]]></find>
+				<action type="after-add"><![CDATA[	// jQuery Quick Edit -- START
+	'QUICKEDIT_POST'					=> 'Quickedit post',
+	'ADVANCED_EDIT'						=> 'Advanced Edit',
+	// jQuery Quick Edit -- END]]></action>
+			</edit>
+		</open>
+		<open src="viewtopic.php">
+			<edit>
+				<find><![CDATA[	'WARN_IMG'			=> $user->img('icon_user_warn', 'WARN_USER'),]]></find>
+				<action type="after-add"><![CDATA[	// jQuery Quick Edit -- START
+	'QUICKEDIT_IMG'		=> $user->img('icon_post_quickedit', 'QUICKEDIT_POST'),
+	'U_QUICKEDIT' 			=> append_sid("{$phpbb_root_path}quickedit.$phpEx"),
+	// jQuery Quick Edit -- END]]></action>
+			</edit>
+		</open>
+		<open src="styles/prosilver/imageset/en/imageset.cfg">
+			<edit>
+				<find><![CDATA[img_icon_post_edit = icon_post_edit.gif*20*42]]></find>
+				<action type="after-add"><![CDATA[img_icon_post_quickedit = icon_post_quickedit.gif*20*74]]></action>
+			</edit>
+		</open>
+		<open src="styles/prosilver/template/index_body.html">
+			<edit>
+				<find><![CDATA[	<!-- IF not S_IS_BOT and U_MARK_FORUMS --><li class="rightside"><a href="{U_MARK_FORUMS}" accesskey="m">{L_MARK_FORUMS_READ}</a></li><!-- ENDIF -->]]></find>
+				<action type="replace-with"><![CDATA[	<!-- IF not S_IS_BOT and U_MARK_FORUMS --><li class="rightside"><a href="{U_MARK_FORUMS}" accesskey="m" class="markread">{L_MARK_FORUMS_READ}</a></li><!-- ENDIF -->]]></action>
+			</edit>
+		</open>
+		<open src="styles/prosilver/template/viewforum_body.html">
+			<edit>
+				<find><![CDATA[	<li class="rightside"><a href="{U_MARK_FORUMS}">{L_MARK_FORUMS_READ}</a></li>]]></find>
+				<action type="replace-with"><![CDATA[	<li class="rightside"><a href="{U_MARK_FORUMS}" class="markread">{L_MARK_FORUMS_READ}</a></li>]]></action>
+			</edit>
+		</open>
+		<open src="styles/prosilver/template/overall_header.html">
+			<edit>
+				<find><![CDATA[</head>]]></find>
+				<action type="before-add"><![CDATA[<!-- IF S_VIEWTOPIC -->
+<!-- INCLUDE quickedit/quickedit_header.html -->
+<!-- ENDIF -->]]></action>
+			</edit>
+		</open>
+		<open src="styles/prosilver/template/overall_footer.html">
+			<edit>
+				<find><![CDATA[</body>]]></find>
+				<action type="before-add"><![CDATA[<!-- JQuery Quickedit Pop Up -->
+<!-- IF S_VIEWTOPIC -->
+<div id="popupQuickedit">  
+</div>
+<div id="quickeditBackground"></div>
+<!-- ENDIF -->
+<!-- JQuery Quickedit Pop Up END -->]]></action>
+			</edit>
+		</open>
+		<open src="styles/prosilver/template/viewtopic_body.html">
+			<edit>
+				<find><![CDATA[		<div class="postbody">]]></find>
+				<inline-edit>
+					<inline-find><![CDATA[class="postbody"]]></inline-find>
+					<inline-action type="after-add"><![CDATA[ id="post{postrow.POST_ID}"]]></inline-action>
+				</inline-edit>
+			</edit>
+			<edit>
+				<find><![CDATA[					<!-- IF postrow.U_EDIT --><li class="edit-icon"><a href="{postrow.U_EDIT}" title="{L_EDIT_POST}"><span>{L_EDIT_POST}</span></a></li><!-- ENDIF -->]]></find>
+				<action type="before-add"><![CDATA[					<!-- IF postrow.U_EDIT --><li class="qe-icon"><a href="#" onclick="return false;" id="quickedit{postrow.POST_ID}" title="{L_QUICKEDIT_POST}"><span>{L_QUICKEDIT_POST}</span></a></li><!-- ENDIF -->]]></action>
+			</edit>
+		</open>
+		<open src="styles/prosilver/theme/buttons.css">
+			<edit>
+				<find><![CDATA[.edit-icon, .edit-icon a			{ background: none top left no-repeat; }]]></find>
+				<action type="after-add"><![CDATA[.qe-icon, .qe-icon a				{ background: none top left no-repeat; }]]></action>
+			</edit>
+			<edit>
+				<find><![CDATA[ul.profile-icons li.edit-icon	{ width: {IMG_ICON_POST_EDIT_WIDTH}px; height: {IMG_ICON_POST_EDIT_HEIGHT}px; }]]></find>
+				<action type="after-add"><![CDATA[ul.profile-icons li.qe-icon		{ width: {IMG_ICON_POST_QUICKEDIT_WIDTH}px; height: {IMG_ICON_POST_QUICKEDIT_HEIGHT}px; }]]></action>
+			</edit>
+			<edit>
+				<find><![CDATA[ul.profile-icons li.edit-icon	{ margin: 0 0 0 3px; }]]></find>
+				<action type="after-add"><![CDATA[ul.profile-icons li.qe-icon	{ margin: 0 0 0 3px; }]]></action>
+			</edit>
+		</open>
+		<open src="styles/prosilver/theme/colours.css">
+			<edit>
+				<find><![CDATA[.edit-icon, .edit-icon a			{ background-image: url("{IMG_ICON_POST_EDIT_SRC}"); }]]></find>
+				<action type="after-add"><![CDATA[.qe-icon, .qe-icon a			{ background-image: url("{IMG_ICON_POST_QUICKEDIT_SRC}"); }]]></action>
 			</edit>
 		</open>
 		<diy-instructions lang="en">After editing all the files please do the following:

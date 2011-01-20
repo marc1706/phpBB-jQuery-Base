@@ -137,6 +137,10 @@ class phpbb_jquery_base
 					);
 			page_footer();
 		}
+		else
+		{
+			echo json_encode($this->return_ary);
+		}
 	}
 	
 	
@@ -803,6 +807,9 @@ class phpbb_jquery_base
 			{
 				case 'forums':
 					// if we are on the index page, mark all forums read
+					$this->add_return(array(
+						'LOCATION'	=> $this->location,
+					));
 					if(strstr($this->location, 'index'))
 					{
 						// mark all forums read
@@ -810,21 +817,37 @@ class phpbb_jquery_base
 						$redirect_url = reapply_sid($phpbb_root_path . 'index.' . $phpEx); // redirect back to index
 					}
 					else
-					{
-						// Display list of active topics for this category?
-						$show_active = (isset($root_data['forum_flags']) && ($root_data['forum_flags'] & FORUM_FLAG_ACTIVE_TOPICS)) ? true : false;
-						
+					{	
+						$sql_from = FORUMS_TABLE . ' f';
+						$lastread_select = '';
+
+						// Grab appropriate forum data
+						if ($config['load_db_lastread'] && $user->data['is_registered'])
+						{
+							$sql_from .= ' LEFT JOIN ' . FORUMS_TRACK_TABLE . ' ft ON (ft.user_id = ' . $user->data['user_id'] . '
+								AND ft.forum_id = f.forum_id)';
+							$lastread_select .= ', ft.mark_time';
+						}
+
+						if ($user->data['is_registered'])
+						{
+							$sql_from .= ' LEFT JOIN ' . FORUMS_WATCH_TABLE . ' fw ON (fw.forum_id = f.forum_id AND fw.user_id = ' . $user->data['user_id'] . ')';
+							$lastread_select .= ', fw.notify_status';
+						}
 						$sql = "SELECT f.* $lastread_select
 							FROM $sql_from
-							WHERE f.forum_id = $forum_id";
+							WHERE f.forum_id = " . $this->forum_id;
 						$result = $db->sql_query($sql);
 						$forum_data = $db->sql_fetchrow($result);
 						$db->sql_freeresult($result);
 
 						if (!$forum_data)
 						{
-							trigger_error('NO_FORUM');
+							//trigger_error('NO_FORUM');
 						}
+						
+						// Display list of active topics for this category?
+						$show_active = (isset($forum_data['forum_flags']) && ($forum_data['forum_flags'] & FORUM_FLAG_ACTIVE_TOPICS)) ? true : false;
 						
 						$sql_array = array(
 							'SELECT'	=> 'f.*',
@@ -859,6 +882,16 @@ class phpbb_jquery_base
 
 							$sql_array['SELECT'] .= ', fa.user_id';
 						}
+						
+						if (!$forum_data)
+						{
+							$root_data = array('forum_id' => 0);
+							$sql_where = '';
+						}
+						else
+						{
+							$sql_where = 'left_id > ' . $root_data['left_id'] . ' AND left_id < ' . $root_data['right_id'];
+						}
 
 						$sql = $db->sql_build_query('SELECT', array(
 							'SELECT'	=> $sql_array['SELECT'],
@@ -876,16 +909,13 @@ class phpbb_jquery_base
 						{
 							$cur_forum_id = $row['forum_id'];
 
-							// Mark forums read?
-							if ($mark_read == 'forums' || $mark_read == 'all')
+							if ($auth->acl_get('f_list', $cur_forum_id))
 							{
-								if ($auth->acl_get('f_list', $cur_forum_id))
-								{
-									$forum_ids[] = $cur_forum_id;
-								}
+								$forum_ids[] = $cur_forum_id;
 							}
 						}
 						
+						// Add 0 to forums array to mark global announcements correctly
 						$forum_ids[] = 0;
 						markread('topics', $forum_ids);
 						
@@ -897,8 +927,10 @@ class phpbb_jquery_base
 					$redirect_url = append_sid("{$phpbb_root_path}viewforum.$phpEx", 'f=' . $this->forum_id);
 				break;
 			}
-			// redirect us to the same page
-			redirect(reapply_sid($redirect_url));
+
+			$this->add_return(array(
+				'MARK_REDIRECT'	=> reapply_sid($redirect_url),
+			));
 		}
 	}
 }
