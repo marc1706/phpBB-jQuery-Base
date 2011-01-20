@@ -71,11 +71,9 @@ class phpbb_jquery_base
 				$this->include_file('includes/functions_display', 'display_forums');
 				$this->include_file('includes/message_parser', 'bbcode_firstpass', true);
 			break;
-			case 'markread_forum':
-				// check what files we need
-			break;
-			case 'markread_all':
-				// same as above
+			case 'markread_forums':
+			case 'markread_topics':
+				// don't need any
 			break;
 			default:
 				$error[] = array('error' => 'NO_MODE', 'action' => 'cancel');
@@ -100,11 +98,11 @@ class phpbb_jquery_base
 				case 'quickedit':
 					$this->quickedit();
 				break;
-				case 'markread_forum':
-					$this->mark_read('forum');
+				case 'markread_forums':
+					$this->mark_read('forums');
 				break;
-				case 'markread_forum':
-					$this->mark_read('all');
+				case 'markread_topics':
+					$this->mark_read('topics');
 			}
 		}
 	}
@@ -794,7 +792,32 @@ class phpbb_jquery_base
 	*/
 	function mark_read($type)
 	{
-	
+		global $db, $template;
+		
+		if($type == 'forums')
+		{
+			// If we are on the index, mark all forums read
+			if(strstr($this->location, 'index'))
+			{
+				$type = 'all';
+			}
+		}
+		// @todo: add "NO_ACCESS" error message when someone tries to do this and is not registered
+		if($user->data['is_registered'] || $config['load_anon_lastread'])
+		{
+			switch($type)
+			{
+				case 'all':
+				
+				break;
+				case 'forums':
+				
+				break;
+				case 'topics':
+				
+				break;
+			}
+		}
 	}
 }
 
