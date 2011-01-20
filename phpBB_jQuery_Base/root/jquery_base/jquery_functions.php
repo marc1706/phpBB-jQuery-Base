@@ -792,31 +792,113 @@ class phpbb_jquery_base
 	*/
 	function mark_read($type)
 	{
-		global $db, $template;
+		global $db, $template, $auth, $user, $config, $phpbb_root_path, $phpEx;
 		
-		if($type == 'forums')
-		{
-			// If we are on the index, mark all forums read
-			if(strstr($this->location, 'index'))
-			{
-				$type = 'all';
-			}
-		}
+		$forum_ids = array();
+
 		// @todo: add "NO_ACCESS" error message when someone tries to do this and is not registered
 		if($user->data['is_registered'] || $config['load_anon_lastread'])
 		{
 			switch($type)
 			{
-				case 'all':
-				
-				break;
 				case 'forums':
-				
-				break;
+					// if we are on the index page, mark all forums read
+					if(strstr($this->location, 'index'))
+					{
+						// mark all forums read
+						markread('all');
+						$redirect_url = reapply_sid($phpbb_root_path . 'index.' . $phpEx); // redirect back to index
+					}
+					else
+					{
+						// Display list of active topics for this category?
+						$show_active = (isset($root_data['forum_flags']) && ($root_data['forum_flags'] & FORUM_FLAG_ACTIVE_TOPICS)) ? true : false;
+						
+						$sql = "SELECT f.* $lastread_select
+							FROM $sql_from
+							WHERE f.forum_id = $forum_id";
+						$result = $db->sql_query($sql);
+						$forum_data = $db->sql_fetchrow($result);
+						$db->sql_freeresult($result);
+
+						if (!$forum_data)
+						{
+							trigger_error('NO_FORUM');
+						}
+						
+						$sql_array = array(
+							'SELECT'	=> 'f.*',
+							'FROM'		=> array(
+								FORUMS_TABLE		=> 'f'
+							),
+							'LEFT_JOIN'	=> array(),
+						);
+						
+						if ($config['load_db_lastread'] && $user->data['is_registered'])
+						{
+							$sql_array['LEFT_JOIN'][] = array('FROM' => array(FORUMS_TRACK_TABLE => 'ft'), 'ON' => 'ft.user_id = ' . $user->data['user_id'] . ' AND ft.forum_id = f.forum_id');
+							$sql_array['SELECT'] .= ', ft.mark_time';
+						}
+						else if ($config['load_anon_lastread'] || $user->data['is_registered'])
+						{
+							$tracking_topics = (isset($_COOKIE[$config['cookie_name'] . '_track'])) ? ((STRIP) ? stripslashes($_COOKIE[$config['cookie_name'] . '_track']) : $_COOKIE[$config['cookie_name'] . '_track']) : '';
+							$tracking_topics = ($tracking_topics) ? tracking_unserialize($tracking_topics) : array();
+
+							if (!$user->data['is_registered'])
+							{
+								$user->data['user_lastmark'] = (isset($tracking_topics['l'])) ? (int) (base_convert($tracking_topics['l'], 36, 10) + $config['board_startdate']) : 0;
+							}
+						}
+						
+						if ($show_active)
+						{
+							$sql_array['LEFT_JOIN'][] = array(
+								'FROM'	=> array(FORUMS_ACCESS_TABLE => 'fa'),
+								'ON'	=> "fa.forum_id = f.forum_id AND fa.session_id = '" . $db->sql_escape($user->session_id) . "'"
+							);
+
+							$sql_array['SELECT'] .= ', fa.user_id';
+						}
+
+						$sql = $db->sql_build_query('SELECT', array(
+							'SELECT'	=> $sql_array['SELECT'],
+							'FROM'		=> $sql_array['FROM'],
+							'LEFT_JOIN'	=> $sql_array['LEFT_JOIN'],
+
+							'WHERE'		=> $sql_where,
+
+							'ORDER_BY'	=> 'f.left_id',
+						));
+
+						$result = $db->sql_query($sql);
+						
+						while ($row = $db->sql_fetchrow($result))
+						{
+							$cur_forum_id = $row['forum_id'];
+
+							// Mark forums read?
+							if ($mark_read == 'forums' || $mark_read == 'all')
+							{
+								if ($auth->acl_get('f_list', $cur_forum_id))
+								{
+									$forum_ids[] = $cur_forum_id;
+								}
+							}
+						}
+						
+						$forum_ids[] = 0;
+						markread('topics', $forum_ids);
+						
+						$redirect_url = reapply_sid($this->location); // redirect to the same page
+					}
 				case 'topics':
-				
+					// Add 0 to forums array to mark global announcements correctly
+					markread('topics', array($this->forum_id, 0));
+					$redirect_url = append_sid("{$phpbb_root_path}viewforum.$phpEx", 'f=' . $this->forum_id);
 				break;
 			}
+			// redirect us to the same page
+			redirect(reapply_sid($redirect_url));
 		}
 	}
 }
