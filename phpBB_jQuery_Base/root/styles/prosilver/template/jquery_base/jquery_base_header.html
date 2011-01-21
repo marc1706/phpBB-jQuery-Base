@@ -48,20 +48,40 @@ $(document).ready(function(){
 	
 	// mark forums read
 	$('li.rightside a.markread').click(function() {
-		cur_location = $(location).attr('href');
-		data = 'mode=markread_forums&location=' + location;
-		qe_do_ajax('mark_read', data, true);
-		popup_open = true;
-		return false;
+		if(popup_open != true)
+		{
+			cur_location = $(location).attr('href');
+			data = 'mode=markread_forums&location=' + location;
+			qe_do_ajax('mark_read', data, true);
+			return false;
+		}
 	});
 	
 	// mark topics read
 	$('div.pagination a.markread').click(function() {
-		cur_location = $(location).attr('href');
-		data = 'mode=markread_topics&location=' + location;
-		qe_do_ajax('mark_read', data, true);
-		popup_open = true;
-		return false;
+		if(popup_open != true)
+		{
+			cur_location = $(location).attr('href');
+			data = 'mode=markread_topics&location=' + location;
+			qe_do_ajax('mark_read', data, true);
+			return false;
+		}
+	});
+	
+	// Quickreply
+	$('#qr_editor_div .button1').click(function() {
+		if(popup_open != true)
+		{
+			var data = 'mode=quickreply';
+			var i = 1;
+			$('#qr_editor_div input:hidden').each(function() {
+				data += '&reply_data' + i + '=' + $(this).attr('name') + '&reply_data_val' + i + '=' + $(this).val();
+				i++;
+			});
+			alert(data);
+			qe_do_ajax('quickreply', data, true);
+			return false;
+		}
 	});
 });
 // load the jQuery popup
@@ -315,6 +335,29 @@ function mark_read(success)
 	}
 }
 
+/**
+* function quickreply
+* show the new post or an error message
+* @todo: use jQuery UI notify widget for error message
+*/
+function quickreply(success)
+{
+	if(success['ERROR'])
+	{
+		if(success['ERROR_COUNT'] > 1)
+		{
+			for(i = 1; i <= success['ERROR_COUNT']; i++)
+			{
+				alert(success['ERROR'][i]);
+			}
+		}
+	}
+	else
+	{
+		alert('no error');
+	}
+}
+
 // general AJAX function
 function qe_do_ajax(mode, data, use_json)
 {
@@ -346,6 +389,9 @@ function qe_do_ajax(mode, data, use_json)
 				break;
 				case 'mark_read':
 					mark_read(data);
+				break;
+				case 'quickreply':
+					quickreply(data);
 				break;
 			}
 		}

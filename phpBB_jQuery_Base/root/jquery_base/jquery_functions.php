@@ -67,6 +67,7 @@ class phpbb_jquery_base
 		switch($this->mode)
 		{
 			case 'quickreply':
+				$this->include_file('includes/functions_posting', 'submit_post');
 			case 'quickedit':
 				$this->include_file('includes/functions_display', 'display_forums');
 				$this->include_file('includes/message_parser', 'bbcode_firstpass', true);
@@ -76,7 +77,7 @@ class phpbb_jquery_base
 				// don't need any
 			break;
 			default:
-				$error[] = array('error' => 'NO_MODE', 'action' => 'cancel');
+				$this->error[] = array('error' => 'NO_MODE', 'action' => 'cancel');
 		}
 	}
 	
@@ -118,16 +119,17 @@ class phpbb_jquery_base
 
 		if(!empty($this->error))
 		{
-			$this->return['error_action'] = 'return';
+			$this->return_ary['ERROR_ACTION'] = 'return';
 			foreach($this->error as $cur_error)
 			{
 				if($cur_error['action'] == 'cancel')
 				{
 					$this->load_tpl = false; // make sure we don't load any template
-					$this->return['error_action'] = 'cancel';
+					$this->return_ary['ERROR_ACTION'] = 'cancel';
 				}
-				$this->return['error'][] = $cur_error['error'];
+				$this->return_ary['ERROR'][] = $cur_error['error'];
 			}
+			$this->return_ary['ERROR_COUNT'] = sizeof($this->return_ary['ERROR']);
 		}
 		
 		if($this->load_tpl)
@@ -137,7 +139,7 @@ class phpbb_jquery_base
 					);
 			page_footer();
 		}
-		else
+		elseif(isset($this->return_ary))
 		{
 			echo json_encode($this->return_ary);
 		}
@@ -786,7 +788,96 @@ class phpbb_jquery_base
 	*/
 	function quickreply()
 	{
-	
+		global $db, $config, $auth, $template, $user;
+		
+		$i = 1;
+		$reply_data = $data = array();
+		
+		while(isset($_POST["reply_data$i"]))
+		{
+			$cur_name = utf8_normalize_nfc(request_var("reply_data$i", ''));
+			$cur_val = utf8_normalize_nfc(request_var("reply_data_val$i", ''));
+			
+			$reply_data[$cur_name] = $cur_val;
+			++$i;
+		}
+		
+		// set basic data
+		if (!$reply_data['topic_id'])
+		{
+			$this->error[] = array('error' => 'NO_TOPIC', 'action' => 'cancel');
+		}
+		else
+		{
+			$data['topic_id'] = $reply_data['topic_id'];
+		}
+		
+		// Force forum id
+		$sql = 'SELECT forum_id
+			FROM ' . TOPICS_TABLE . '
+			WHERE topic_id = ' . $data['topic_id'];
+		$result = $db->sql_query($sql);
+		$f_id = (int) $db->sql_fetchfield('forum_id');
+		$db->sql_freeresult($result);
+
+		$data['forum_id'] = (!$f_id) ? $reply_data['forum_id'] : $f_id;
+		
+		print_r($data);
+		
+		/* Create the data array for submit_post
+		$data = array(
+			// General Posting Settings
+			'forum_id'          	=> $post_data['forum_id'],
+			'topic_id'          	=> $post_data['topic_id'],
+			'icon_id'           	=> $post_data['post_icon_id'],
+			'post_id'			=> $post_data['post_id'],
+			'poster_id'			=> $post_data['poster_id'],
+			'topic_replies'		=> $post_data['topic_replies'],
+			'topic_replies_real'	=> $post_data['topic_replies_real'],
+			'topic_first_post_id'	=> $post_data['topic_first_post_id'],
+			'topic_last_post_id'	=> $post_data['topic_last_post_id'],
+			'post_edit_user'		=> $edit_user,
+			'forum_parents'		=> $post_data['forum_parents'],
+			'forum_name'		=> $post_data['forum_name'],
+			'topic_poster'		=> $post_data['topic_poster'],
+		
+			// Defining Post Options
+			'enable_bbcode' 	=> $post_data['enable_bbcode'],
+			'enable_smilies'    => $post_data['enable_smilies'],
+			'enable_urls'       => $post_data['enable_magic_url'],
+			'enable_sig'        => $post_data['enable_sig'],
+			'topic_attachment'	=> (isset($post_data['topic_attachment'])) ? (int) $post_data['topic_attachment'] : 0,
+			'poster_ip'			=> (isset($post_data['poster_ip'])) ? $post_data['poster_ip'] : $user->ip,
+			'attachment_data'	=> $message_parser->attachment_data,
+			'filename_data'		=> $message_parser->filename_data,
+		
+			// Message Body
+			'message'           => $message_parser->message,
+			'message_md5'   	=> md5($message_parser->message),
+		
+			// Values from generate_text_for_storage()
+			'bbcode_bitfield'   => $bitfield,
+			'bbcode_uid'        => $uid,
+		
+			// Other Options
+			'post_edit_locked'  => $post_data['post_edit_locked'],
+			'post_edit_reason'	=> ($post_data['post_edit_reason']) ? $post_data['post_edit_reason'] : '',
+			'topic_title'       => $post_data['topic_title'],
+			'topic_time_limit'	=> ($post_data['topic_time_limit']) ? $post_data['topic_time_limit'] : 0,
+		
+			// Email Notification Settings
+			'notify_set'        => false,
+			'notify'            => false,
+			'post_time'         => 0,
+			'forum_name'        => $post_data['forum_name'],
+		
+			// Indexing
+			'enable_indexing'   => true,
+		
+			// 3.0.6
+			'force_approved_state'  => true, // post has already been approved
+		);
+		*/
 	}
 
 	/*
