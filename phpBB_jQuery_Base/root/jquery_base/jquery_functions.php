@@ -810,7 +810,8 @@ class phpbb_jquery_base
 					$this->add_return(array(
 						'LOCATION'	=> $this->location,
 					));
-					if(strstr($this->location, 'index'))
+					
+					if(strpos($this->location, 'index') !== false)
 					{
 						// mark all forums read
 						markread('all');
@@ -921,6 +922,7 @@ class phpbb_jquery_base
 						
 						$redirect_url = reapply_sid($this->location); // redirect to the same page
 					}
+				break;
 				case 'topics':
 					// Add 0 to forums array to mark global announcements correctly
 					markread('topics', array($this->forum_id, 0));

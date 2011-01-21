@@ -48,7 +48,6 @@ $(document).ready(function(){
 	
 	// mark forums read
 	$('a.markread').click(function() {
-		alert('in');
 		cur_location = $(location).attr('href');
 		data = 'mode=markread_forums&location=' + location;
 		qe_do_ajax('mark_read', data, true);
@@ -311,11 +310,12 @@ function mark_read(success)
 {
 	if(success['MARK_REDIRECT'])
 	{   
-		$(location).attr('href', success['MARK_REDIRECT']);
+		//$(location).attr('href', success['MARK_REDIRECT']);
+		location.reload();
 	}
 	else
 	{
-		alert('bullshit');
+		// @todo: error message
 	}
 }
 
