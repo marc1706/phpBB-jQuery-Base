@@ -47,7 +47,7 @@ $(document).ready(function(){
 	});
 	
 	// mark forums read
-	$('a.markread').click(function() {
+	$('li.rightside a.markread').click(function() {
 		cur_location = $(location).attr('href');
 		data = 'mode=markread_forums&location=' + location;
 		qe_do_ajax('mark_read', data, true);
@@ -56,15 +56,12 @@ $(document).ready(function(){
 	});
 	
 	// mark topics read
-	$('div.pagination a.markread_topics').click(function() {
-		if($(this).attr('accesskey') == 'm')
-		{
-			return false;
-			cur_location = $(location).attr('href');
-			data = 'mode=markread_topics&location=' + location;
-			qe_do_ajax('mark_read', data, true);
-			popup_open = true;
-		}
+	$('div.pagination a.markread').click(function() {
+		cur_location = $(location).attr('href');
+		data = 'mode=markread_topics&location=' + location;
+		qe_do_ajax('mark_read', data, true);
+		popup_open = true;
+		return false;
 	});
 });
 // load the jQuery popup
@@ -309,8 +306,7 @@ function advanced_edit(success)
 function mark_read(success)
 {
 	if(success['MARK_REDIRECT'])
-	{   
-		//$(location).attr('href', success['MARK_REDIRECT']);
+	{
 		location.reload();
 	}
 	else

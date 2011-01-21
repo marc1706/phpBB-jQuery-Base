@@ -844,7 +844,7 @@ class phpbb_jquery_base
 
 						if (!$forum_data)
 						{
-							//trigger_error('NO_FORUM');
+							trigger_error('NO_FORUM');
 						}
 						
 						// Display list of active topics for this category?
@@ -891,7 +891,7 @@ class phpbb_jquery_base
 						}
 						else
 						{
-							$sql_where = 'left_id > ' . $root_data['left_id'] . ' AND left_id < ' . $root_data['right_id'];
+							$sql_where = 'left_id > ' . $forum_data['left_id'] . ' AND left_id < ' . $forum_data['right_id'];
 						}
 
 						$sql = $db->sql_build_query('SELECT', array(
