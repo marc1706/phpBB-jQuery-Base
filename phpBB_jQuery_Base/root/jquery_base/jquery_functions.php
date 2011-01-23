@@ -822,6 +822,57 @@ class phpbb_jquery_base
 
 		$data['forum_id'] = (!$f_id) ? $reply_data['forum_id'] : $f_id;
 		
+		$sql = 'SELECT f.*, t.*
+			FROM ' . TOPICS_TABLE . ' t, ' . FORUMS_TABLE . " f
+			WHERE t.topic_id = $topic_id
+				AND (f.forum_id = t.forum_id
+					OR f.forum_id = $forum_id)" .
+			(($auth->acl_get('m_approve', $forum_id)) ? '' : 'AND t.topic_approved = 1');
+		$result = $db->sql_query($sql);
+		$post_data = $db->sql_fetchrow($result);
+		$db->sql_freeresult($result);
+		
+		// Not able to reply to unapproved posts/topics
+		if ($auth->acl_get('m_approve', $forum_id) && (!$post_data['topic_approved'] || !$post_data['post_approved']))
+		{
+			trigger_error('TOPIC_UNAPPROVED');
+		}
+		
+		$user->add_lang(array('posting', 'viewtopic'));
+		
+		// Check permissions
+		if ($user->data['is_bot'])
+		{
+			$this->error[] = array(append_sid("{$phpbb_root_path}index.$phpEx"));
+			$this->error[] = array('error' => 'RULES_REPLY_CANNOT', 'action' => 'cancel');
+		}
+
+		// Is the user able to read within this forum?
+		if (!$auth->acl_get('f_read', $data['forum_id']))
+		{
+			if ($user->data['user_id'] != ANONYMOUS)
+			{
+				$this->error[] = array('error' => 'USER_CANNOT_READ', 'action' => 'cancel');
+			}
+		}
+		
+		if (!$user->data['is_registered'] || !$auth->acl_gets('f_edit', 'm_edit', $forum_id))
+		{
+			$this->error[] = array('error' => 'USER_CANNOT_REPLY', 'action' => 'cancel');
+		}
+		
+		// Is the user able to post within this forum?
+		if ($post_data['forum_type'] != FORUM_POST)
+		{
+			$this->error[] = array('error' => 'USER_CANNOT_FORUM_POST', 'action' => 'cancel');
+		}
+		
+		// Forum/Topic locked?
+		if (($post_data['forum_status'] == ITEM_LOCKED || (isset($post_data['topic_status']) && $post_data['topic_status'] == ITEM_LOCKED)) && !$auth->acl_get('m_edit', $forum_id))
+		{
+			$this->error[] = array('error' => (($post_data['forum_status'] == ITEM_LOCKED) ? 'FORUM_LOCKED' : 'TOPIC_LOCKED'), 'action' => 'cancel');
+		}
+		
 		print_r($data);
 		
 		/* Create the data array for submit_post
