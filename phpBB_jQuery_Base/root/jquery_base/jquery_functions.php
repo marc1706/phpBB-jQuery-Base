@@ -785,6 +785,9 @@ class phpbb_jquery_base
 
 	/*
 	* Quickly reply to posts
+	*
+	* posting and viewtopic code from phpBB 3.0.8:
+	* @copyright (c) 2005 phpBB Group
 	*/
 	function quickreply()
 	{
@@ -802,6 +805,11 @@ class phpbb_jquery_base
 			++$i;
 		}
 		
+		$reply_data['subject'] = utf8_normalize_nfc(request_var('subject', '', true));
+		$reply_data['message'] = utf8_normalize_nfc(request_var('message', '', true));
+		
+		print_r($reply_data);
+		
 		// set basic data
 		if (!$reply_data['topic_id'])
 		{
@@ -809,31 +817,31 @@ class phpbb_jquery_base
 		}
 		else
 		{
-			$data['topic_id'] = $reply_data['topic_id'];
+			$reply_data['topic_id'] = (int) $reply_data['topic_id'];
 		}
 		
 		// Force forum id
 		$sql = 'SELECT forum_id
 			FROM ' . TOPICS_TABLE . '
-			WHERE topic_id = ' . $data['topic_id'];
+			WHERE topic_id = ' . $reply_data['topic_id'];
 		$result = $db->sql_query($sql);
 		$f_id = (int) $db->sql_fetchfield('forum_id');
 		$db->sql_freeresult($result);
 
-		$data['forum_id'] = (!$f_id) ? $reply_data['forum_id'] : $f_id;
+		$reply_data['forum_id'] = (!$f_id) ? (int) $reply_data['forum_id'] : $f_id;
 		
 		$sql = 'SELECT f.*, t.*
 			FROM ' . TOPICS_TABLE . ' t, ' . FORUMS_TABLE . " f
-			WHERE t.topic_id = $topic_id
+			WHERE t.topic_id = {$reply_data['topic_id']}
 				AND (f.forum_id = t.forum_id
-					OR f.forum_id = $forum_id)" .
-			(($auth->acl_get('m_approve', $forum_id)) ? '' : 'AND t.topic_approved = 1');
+					OR f.forum_id = {$reply_data['forum_id']})" .
+			(($auth->acl_get('m_approve', $reply_data['forum_id'])) ? '' : 'AND t.topic_approved = 1');
 		$result = $db->sql_query($sql);
 		$post_data = $db->sql_fetchrow($result);
 		$db->sql_freeresult($result);
-		
+
 		// Not able to reply to unapproved posts/topics
-		if ($auth->acl_get('m_approve', $forum_id) && (!$post_data['topic_approved'] || !$post_data['post_approved']))
+		if ($auth->acl_get('m_approve', $reply_data['forum_id']) && (!$post_data['topic_approved'] || (isset($post_data['post_approved']) && !$post_data['post_approved'])))
 		{
 			trigger_error('TOPIC_UNAPPROVED');
 		}
@@ -848,7 +856,7 @@ class phpbb_jquery_base
 		}
 
 		// Is the user able to read within this forum?
-		if (!$auth->acl_get('f_read', $data['forum_id']))
+		if (!$auth->acl_get('f_read', $reply_data['forum_id']))
 		{
 			if ($user->data['user_id'] != ANONYMOUS)
 			{
@@ -856,7 +864,7 @@ class phpbb_jquery_base
 			}
 		}
 		
-		if (!$user->data['is_registered'] || !$auth->acl_gets('f_edit', 'm_edit', $forum_id))
+		if (!$user->data['is_registered'] || !$auth->acl_gets('f_edit', 'm_edit', $reply_data['forum_id']))
 		{
 			$this->error[] = array('error' => 'USER_CANNOT_REPLY', 'action' => 'cancel');
 		}
@@ -868,12 +876,141 @@ class phpbb_jquery_base
 		}
 		
 		// Forum/Topic locked?
-		if (($post_data['forum_status'] == ITEM_LOCKED || (isset($post_data['topic_status']) && $post_data['topic_status'] == ITEM_LOCKED)) && !$auth->acl_get('m_edit', $forum_id))
+		if (($post_data['forum_status'] == ITEM_LOCKED || (isset($post_data['topic_status']) && $post_data['topic_status'] == ITEM_LOCKED)) && !$auth->acl_get('m_edit', $reply_data['forum_id']))
 		{
 			$this->error[] = array('error' => (($post_data['forum_status'] == ITEM_LOCKED) ? 'FORUM_LOCKED' : 'TOPIC_LOCKED'), 'action' => 'cancel');
 		}
 		
-		print_r($data);
+		// Determine some vars
+		if (isset($post_data['poster_id']) && $post_data['poster_id'] == ANONYMOUS)
+		{
+			$post_data['quote_username'] = (!empty($post_data['post_username'])) ? $post_data['post_username'] : $user->lang['GUEST'];
+		}
+		else
+		{
+			$post_data['quote_username'] = isset($post_data['username']) ? $post_data['username'] : '';
+		}
+		
+		$post_data['post_edit_locked']	= 0;
+		$post_data['post_subject']		= (isset($post_data['topic_title'])) ? $post_data['topic_title'] : '';
+		$post_data['topic_time_limit']	= (isset($post_data['topic_time_limit'])) ? (($post_data['topic_time_limit']) ? (int) $post_data['topic_time_limit'] / 86400 : (int) $post_data['topic_time_limit']) : 0;
+		$post_data['poll_length']		= (!empty($post_data['poll_length'])) ? (int) $post_data['poll_length'] / 86400 : 0;
+		$post_data['poll_start']		= (!empty($post_data['poll_start'])) ? (int) $post_data['poll_start'] : 0;
+		$post_data['icon_id']			= 0;
+		$post_data['poll_options']		= array();
+		
+		$orig_poll_options_size = sizeof($post_data['poll_options']);
+
+		$message_parser = new parse_message();
+
+		// Set some default variables
+		$uninit = array('post_attachment' => 0, 'poster_id' => $user->data['user_id'], 'enable_magic_url' => 0, 'topic_status' => 0, 'topic_type' => POST_NORMAL, 'post_subject' => '', 'topic_title' => '', 'post_time' => 0, 'post_edit_reason' => '', 'notify_set' => 0);
+		
+		foreach ($uninit as $var_name => $default_value)
+		{
+			if (!isset($post_data[$var_name]))
+			{
+				$post_data[$var_name] = $default_value;
+			}
+		}
+		unset($uninit);
+		
+		// Always check if the submitted attachment data is valid and belongs to the user.
+		// Further down (especially in submit_post()) we do not check this again.
+		$message_parser->get_submitted_attachment_data($post_data['poster_id']);
+		
+		$post_data['username'] = '';
+		
+		$post_data['enable_urls'] = $post_data['enable_magic_url'];
+		$post_data['enable_sig']		= ($config['allow_sig'] && $user->optionget('attachsig')) ? true: false;
+		$post_data['enable_smilies']	= ($config['allow_smilies'] && $user->optionget('smilies')) ? true : false;
+		$post_data['enable_bbcode']		= ($config['allow_bbcode'] && $user->optionget('bbcode')) ? true : false;
+		$post_data['enable_urls']		= true;
+		$post_data['enable_magic_url'] = $post_data['drafts'] = false;
+		
+		$check_value = (($post_data['enable_bbcode']+1) << 8) + (($post_data['enable_smilies']+1) << 4) + (($post_data['enable_urls']+1) << 2) + (($post_data['enable_sig']+1) << 1);
+		
+		// Check if user is watching this topic
+		if ($config['allow_topic_notify'] && $user->data['is_registered'])
+		{
+			$sql = 'SELECT topic_id
+				FROM ' . TOPICS_WATCH_TABLE . '
+				WHERE topic_id = ' . $reply_data['topic_id'] . '
+					AND user_id = ' . $user->data['user_id'];
+			$result = $db->sql_query($sql);
+			$post_data['notify_set'] = (int) $db->sql_fetchfield('topic_id');
+			$db->sql_freeresult($result);
+		}
+		
+		// HTML, BBCode, Smilies, Images and Flash status
+		$bbcode_status	= ($config['allow_bbcode'] && $auth->acl_get('f_bbcode', $reply_data['forum_id'])) ? true : false;
+		$smilies_status	= ($config['allow_smilies'] && $auth->acl_get('f_smilies', $reply_data['forum_id'])) ? true : false;
+		$img_status		= ($bbcode_status && $auth->acl_get('f_img', $reply_data['forum_id'])) ? true : false;
+		$url_status		= ($config['allow_post_links']) ? true : false;
+		$flash_status	= ($bbcode_status && $auth->acl_get('f_flash', $reply_data['forum_id']) && $config['allow_post_flash']) ? true : false;
+		$quote_status	= true;
+		
+		
+		// now begin preparing for submitting this reply
+		$post_data['topic_cur_post_id']	= request_var('topic_cur_post_id', 0);
+		$post_data['post_subject']		= $reply_data['subject'];
+		$message_parser->message		= $reply_data['message'];
+
+		$post_data['post_edit_reason']	= '';
+
+		$post_data['orig_topic_type']	= $post_data['topic_type'];
+		$post_data['topic_type']		= (int) $post_data['topic_type'];
+		$post_data['topic_time_limit']	= (int) $post_data['topic_time_limit'];
+		
+		$post_data['enable_bbcode']		= (!$bbcode_status) ? false : true;
+		$post_data['enable_smilies']	= (!$smilies_status) ? false : true;
+		$post_data['enable_urls']		= 1;
+		$post_data['enable_sig']		= (!$config['allow_sig'] || !$auth->acl_get('f_sigs', $reply_data['forum_id']) || !$auth->acl_get('u_sig')) ? false : ((isset($reply_data['attach_sig']) && $user->data['is_registered']) ? true : false);
+		$notify = false; // defaults to 0 ( we can't select to be notified ;) )
+		
+		$topic_lock			= false;
+		$post_lock			= false;
+		$poll_delete		= false;
+		
+		$status_switch = (($post_data['enable_bbcode']+1) << 8) + (($post_data['enable_smilies']+1) << 4) + (($post_data['enable_urls']+1) << 2) + (($post_data['enable_sig']+1) << 1);
+		$status_switch = ($status_switch != $check_value);
+		
+		// default values since we can't do anything with a poll in quickreply
+		$post_data['poll_title']		= '';
+		$post_data['poll_length']		= 0;
+		$post_data['poll_option_text']	= '';
+		$post_data['poll_max_options']	= 1;
+		$post_data['poll_vote_change']	= 0;
+		
+		
+		// If replying/quoting and last post id has changed
+		// give user option to continue submit or return to post
+		// notify and show user the post made between his request and the final submit
+		if ($post_data['topic_cur_post_id'] && $post_data['topic_cur_post_id'] != $post_data['topic_last_post_id'])
+		{
+			// Only do so if it is allowed forum-wide
+			if ($post_data['forum_flags'] & FORUM_FLAG_POST_REVIEW)
+			{
+				if (topic_review($reply_data['topic_id'], $reply_data['forum_id'], 'post_review', $post_data['topic_cur_post_id']))
+				{
+					$this->error[] = array('error' => 'POST_REVIEW_EXPLAIN', 'action' => 'return');
+				}
+			}
+		}
+		
+		// Parse Attachments - before checksum is calculated
+		// @todo: check if we need this -- needs to be tested
+		$message_parser->parse_attachments('fileupload', 'reply', $reply_data['forum_id'], true, false, false);
+		
+		// Grab md5 'checksum' of new message
+		$message_md5 = md5($message_parser->message);
+		
+		$this->add_return(array(
+			'SUCCESS_MESSAGE' => $user->lang['PJB_QUICKREPLY_SUCCESS_MSG'],
+			'SUCCESS_TITLE' => $user->lang['PJB_QUICKREPLY_SUCCESS'],
+		));
+		
+		$this->add_return($data);
 		
 		/* Create the data array for submit_post
 		$data = array(
@@ -958,6 +1095,11 @@ class phpbb_jquery_base
 						// mark all forums read
 						markread('all');
 						$redirect_url = reapply_sid($phpbb_root_path . 'index.' . $phpEx); // redirect back to index
+						
+						$this->add_return(array(
+							'SUCCESS_MESSAGE' => $user->lang['PJB_MARKREAD_FORUMS_SUCCESS_MSG'],
+							'SUCCESS_TITLE' => $user->lang['PJB_MARKREAD_FORUMS_SUCCESS'],
+						));
 					}
 					else
 					{	
@@ -1063,12 +1205,27 @@ class phpbb_jquery_base
 						markread('topics', $forum_ids);
 						
 						$redirect_url = reapply_sid($this->location); // redirect to the same page
+						
+						$this->add_return(array(
+							'SUCCESS_MESSAGE' => $user->lang['PJB_MARKREAD_FORUMS_SUCCESS_MSG'],
+							'SUCCESS_TITLE' => $user->lang['PJB_MARKREAD_FORUMS_SUCCESS'],
+						));
 					}
 				break;
 				case 'topics':
 					// Add 0 to forums array to mark global announcements correctly
 					markread('topics', array($this->forum_id, 0));
+					
+					// get forum name
+					$sql = 'SELECT forum_name FROM '. FORUMS_TABLE . ' WHERE forum_id = ' . (int) $this->forum_id;
+					$result = $db->sql_query($sql);
+					$forum_name = $db->sql_fetchfield('forum_name');
+					
 					$redirect_url = append_sid("{$phpbb_root_path}viewforum.$phpEx", 'f=' . $this->forum_id);
+					$this->add_return(array(
+						'SUCCESS_MESSAGE' => sprintf($user->lang['PJB_MARKREAD_TOPICS_SUCCESS_MSG'], $forum_name),
+						'SUCCESS_TITLE' => $user->lang['PJB_MARKREAD_TOPICS_SUCCESS'],
+					));
 				break;
 			}
 
