@@ -808,8 +808,6 @@ class phpbb_jquery_base
 		$reply_data['subject'] = utf8_normalize_nfc(request_var('subject', '', true));
 		$reply_data['message'] = utf8_normalize_nfc(request_var('message', '', true));
 		
-		print_r($reply_data);
-		
 		// set basic data
 		if (!$reply_data['topic_id'])
 		{
@@ -953,8 +951,8 @@ class phpbb_jquery_base
 		
 		// now begin preparing for submitting this reply
 		$post_data['topic_cur_post_id']	= request_var('topic_cur_post_id', 0);
-		$post_data['post_subject']		= $reply_data['subject'];
-		$message_parser->message		= $reply_data['message'];
+		$post_data['post_subject']		= utf8_normalize_nfc(request_var('subject', '', true));
+		$message_parser->message		= utf8_normalize_nfc(request_var('message', '', true));
 
 		$post_data['post_edit_reason']	= '';
 
@@ -1005,12 +1003,161 @@ class phpbb_jquery_base
 		// Grab md5 'checksum' of new message
 		$message_md5 = md5($message_parser->message);
 		
-		$this->add_return(array(
-			'SUCCESS_MESSAGE' => $user->lang['PJB_QUICKREPLY_SUCCESS_MSG'],
-			'SUCCESS_TITLE' => $user->lang['PJB_QUICKREPLY_SUCCESS'],
-		));
+		$update_message = ($status_switch) ? true : false;
 		
-		$this->add_return($data);
+		// let the message parser run
+		$message_parser->parse($post_data['enable_bbcode'], ($config['allow_post_links']) ? $post_data['enable_urls'] : false, $post_data['enable_smilies'], $img_status, $flash_status, $quote_status, $config['allow_post_links']);
+		
+		if ($config['flood_interval'] && !$auth->acl_get('f_ignoreflood', $reply_data['forum_id']))
+		{
+			// Flood check
+			$last_post_time = 0;
+
+			if ($user->data['is_registered'])
+			{
+				$last_post_time = $user->data['user_lastpost_time'];
+			}
+			else
+			{
+				$sql = 'SELECT post_time AS last_post_time
+					FROM ' . POSTS_TABLE . "
+					WHERE poster_ip = '" . $user->ip . "'
+						AND post_time > " . (time() - $config['flood_interval']);
+				$result = $db->sql_query_limit($sql, 1);
+				if ($row = $db->sql_fetchrow($result))
+				{
+					$last_post_time = $row['last_post_time'];
+				}
+				$db->sql_freeresult($result);
+			}
+
+			if ($last_post_time && (time() - $last_post_time) < intval($config['flood_interval']))
+			{
+				$this->error[] = array('error' => 'FLOOD_ERROR', 'action' => 'return');
+			}
+		}
+		
+		// Validate username
+		if ($post_data['username'] && !$user->data['is_registered'])
+		{
+			$this->include_file('includes/functions_user', 'user_get_id_name');
+
+			if (($result = validate_username($post_data['username'], (!empty($post_data['post_username'])) ? $post_data['post_username'] : '')) !== false)
+			{
+				$user->add_lang('ucp');
+				$this->error[] = array('error' => $result . '_USERNAME', 'action' => 'return');
+			}
+		}
+			
+		// check form key
+		
+		// we enforce a minimum value of half a minute here.
+		$timespan = ($config['form_token_lifetime'] == -1) ? -1 : max(30, $config['form_token_lifetime']);
+
+		if (isset($reply_data['creation_time']) && isset($reply_data['form_token']))
+		{
+			$creation_time	= abs($reply_data['creation_time']);
+			$token = $reply_data['form_token'];
+			$form_name = 'posting';
+
+			$diff = time() - $creation_time;
+
+			// If creation_time and the time() now is zero we can assume it was not a human doing this (the check for if ($diff)...
+			if ($diff && ($diff <= $timespan || $timespan === -1))
+			{
+				$token_sid = ($user->data['user_id'] == ANONYMOUS && !empty($config['form_token_sid_guests'])) ? $user->session_id : '';
+				$key = sha1($creation_time . $user->data['user_form_salt'] . $form_name . $token_sid);
+
+				if ($key === $token)
+				{
+					$correct_token = true;
+				}
+			}
+		}
+		
+		if(!$correct_token)
+		{
+			$this->error[] = array('error' => 'FORM_INVALID', 'action' => 'return');
+		}
+		
+		$post_data['poll_last_vote'] = 0;
+		$poll = array();
+		
+		if (sizeof($message_parser->warn_msg))
+		{
+			foreach($message_parser->warn_msg as $cur_error)
+			{
+				$this->error[] = array('error' => $cur_error, 'action' => 'return');
+			}
+		}
+		
+		// DNSBL check
+		if ($config['check_dnsbl'])
+		{
+			if (($dnsbl = $user->check_dnsbl('post')) !== false)
+			{
+				$this->error[] = array('error' => sprintf($user->lang['IP_BLACKLISTED'], $user->ip, $dnsbl[1]), 'action' => 'return');
+			}
+		}
+		
+		if (!sizeof($this->error))
+		{
+			$data = array(
+				'topic_title'			=> (empty($post_data['topic_title'])) ? $post_data['post_subject'] : $post_data['topic_title'],
+				'topic_first_post_id'	=> (isset($post_data['topic_first_post_id'])) ? (int) $post_data['topic_first_post_id'] : 0,
+				'topic_last_post_id'	=> (isset($post_data['topic_last_post_id'])) ? (int) $post_data['topic_last_post_id'] : 0,
+				'topic_time_limit'		=> (int) $post_data['topic_time_limit'],
+				'topic_attachment'		=> (isset($post_data['topic_attachment'])) ? (int) $post_data['topic_attachment'] : 0,
+				'post_id'				=> 0,
+				'topic_id'				=> (int) $reply_data['topic_id'],
+				'forum_id'				=> (int) $reply_data['forum_id'],
+				'icon_id'				=> (int) $post_data['icon_id'],
+				'poster_id'				=> (int) $post_data['poster_id'],
+				'enable_sig'			=> (bool) $post_data['enable_sig'],
+				'enable_bbcode'			=> (bool) $post_data['enable_bbcode'],
+				'enable_smilies'		=> (bool) $post_data['enable_smilies'],
+				'enable_urls'			=> (bool) $post_data['enable_urls'],
+				'enable_indexing'		=> (bool) $post_data['enable_indexing'],
+				'message_md5'			=> (string) $message_md5,
+				'post_time'				=> (isset($post_data['post_time'])) ? (int) $post_data['post_time'] : $current_time,
+				'post_checksum'			=> (isset($post_data['post_checksum'])) ? (string) $post_data['post_checksum'] : '',
+				'post_edit_reason'		=> $post_data['post_edit_reason'],
+				'post_edit_user'		=> (isset($post_data['post_edit_user'])) ? (int) $post_data['post_edit_user'] : 0,
+				'forum_parents'			=> $post_data['forum_parents'],
+				'forum_name'			=> $post_data['forum_name'],
+				'notify'				=> $notify,
+				'notify_set'			=> $post_data['notify_set'],
+				'poster_ip'				=> (isset($post_data['poster_ip'])) ? $post_data['poster_ip'] : $user->ip,
+				'post_edit_locked'		=> (int) $post_data['post_edit_locked'],
+				'bbcode_bitfield'		=> $message_parser->bbcode_bitfield,
+				'bbcode_uid'			=> $message_parser->bbcode_uid,
+				'message'				=> $message_parser->message,
+				'attachment_data'		=> $message_parser->attachment_data,
+				'filename_data'			=> $message_parser->filename_data,
+
+				'topic_approved'		=> (isset($post_data['topic_approved'])) ? $post_data['topic_approved'] : false,
+				'post_approved'			=> (isset($post_data['post_approved'])) ? $post_data['post_approved'] : false,
+			);
+			
+			// The last parameter tells submit_post if search indexer has to be run
+			$redirect_url = submit_post('reply', $post_data['post_subject'], $post_data['username'], $post_data['topic_type'], $poll, $data, $update_message, ($update_message) ? true : false);
+			
+			$this->add_return(array(
+				'SUCCESS_MESSAGE' => $user->lang['PJB_QUICKREPLY_SUCCESS_MSG'],
+				'SUCCESS_TITLE' => $user->lang['PJB_QUICKREPLY_SUCCESS'],
+			));
+			
+			// Now get the post id of the new post
+			$post_id = $data['post_id'];
+			
+			
+		}
+		
+		
+		
+		
+		
+		//$this->add_return($data);
 		
 		/* Create the data array for submit_post
 		$data = array(

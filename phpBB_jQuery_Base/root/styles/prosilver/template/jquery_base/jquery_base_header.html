@@ -19,7 +19,8 @@ var edited_by_div = '#post\%d div.notice';
 */
 var popup_open = false;
 var cur_post_id = 0;
-var logged_in = {S_USER_LOGGED_IN};
+
+var logged_in = '{S_USER_LOGGED_IN}';
 
 /**
 * init functions
@@ -79,7 +80,7 @@ $(document).ready(function(){
 			
 			// get some more info, i.e. subject
 			data += '&subject=' + $('#qr_editor_div input#subject').val();
-			data += '&message=' + $('#qr_editor_div textarea.inputbox').val();
+			data += '&' + $('#qr_editor_div textarea.inputbox').serialize();
 
 			var i = 1;
 			$('#qr_editor_div input:hidden').each(function() {
@@ -370,12 +371,9 @@ function quickreply(success)
 {
 	if(success['ERROR'])
 	{
-		if(success['ERROR_COUNT'] > 1)
+		for(i = 0; i < success['ERROR_COUNT']; i++)
 		{
-			for(i = 1; i <= success['ERROR_COUNT']; i++)
-			{
-				alert(success['ERROR'][i]);
-			}
+			pjB_output_info('', success['ERROR'][i], false);
 		}
 	}
 	else
