@@ -87,7 +87,7 @@ $(document).ready(function(){
 				data += '&reply_data' + i + '=' + $(this).attr('name') + '&reply_data_val' + i + '=' + $(this).val();
 				i++;
 			});
-			qe_do_ajax('quickreply', data, true);
+			qe_do_ajax('quickreply', data, false);
 		}
 	});
 	
@@ -378,7 +378,8 @@ function quickreply(success)
 	}
 	else
 	{
-		pjB_output_info(success['SUCCESS_TITLE'], success['SUCCESS_MESSAGE'], true);
+		//pjB_output_info(success['SUCCESS_TITLE'], success['SUCCESS_MESSAGE'], true);
+		$('#pjb-quickreply').html($('#pjb-quickreply').html() + success);
 	}
 }
 

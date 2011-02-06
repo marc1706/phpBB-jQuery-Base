@@ -796,6 +796,8 @@ class phpbb_jquery_base
 		$i = 1;
 		$reply_data = $data = array();
 		
+		$current_time = time();
+		
 		while(isset($_POST["reply_data$i"]))
 		{
 			$cur_name = utf8_normalize_nfc(request_var("reply_data$i", ''));
@@ -1119,7 +1121,7 @@ class phpbb_jquery_base
 				'enable_urls'			=> (bool) $post_data['enable_urls'],
 				'enable_indexing'		=> (bool) $post_data['enable_indexing'],
 				'message_md5'			=> (string) $message_md5,
-				'post_time'				=> (isset($post_data['post_time'])) ? (int) $post_data['post_time'] : $current_time,
+				'post_time'				=> $current_time,
 				'post_checksum'			=> (isset($post_data['post_checksum'])) ? (string) $post_data['post_checksum'] : '',
 				'post_edit_reason'		=> $post_data['post_edit_reason'],
 				'post_edit_user'		=> (isset($post_data['post_edit_user'])) ? (int) $post_data['post_edit_user'] : 0,
@@ -1136,7 +1138,9 @@ class phpbb_jquery_base
 				'filename_data'			=> $message_parser->filename_data,
 
 				'topic_approved'		=> (isset($post_data['topic_approved'])) ? $post_data['topic_approved'] : false,
-				'post_approved'			=> (isset($post_data['post_approved'])) ? $post_data['post_approved'] : false,
+				'post_approved'			=> ($auth->acl_get('f_noapprove', $reply_data['forum_id'])) ? true : false,
+				
+				'force_approved_state'  => true, // post has already been approved
 			);
 			
 			// The last parameter tells submit_post if search indexer has to be run
@@ -1150,7 +1154,306 @@ class phpbb_jquery_base
 			// Now get the post id of the new post
 			$post_id = $data['post_id'];
 			
+			//print_r($data);
+			//die;
 			
+			// Now let's start with the viewtopic part of this function
+			global $phpbb_root_path, $phpEx;
+			
+			$user_cache = array();
+			$bbcode_bitfield = $view = '';
+			
+			// get $user_cache
+			$sql = $db->sql_build_query('SELECT', array(
+				'SELECT'	=> 'u.*, z.friend, z.foe, p.*',
+
+				'FROM'		=> array(
+					USERS_TABLE		=> 'u',
+					POSTS_TABLE		=> 'p',
+				),
+
+				'LEFT_JOIN'	=> array(
+					array(
+						'FROM'	=> array(ZEBRA_TABLE => 'z'),
+						'ON'	=> 'z.user_id = ' . $user->data['user_id'] . ' AND z.zebra_id = p.poster_id'
+					)
+				),
+
+				'WHERE'		=> $db->sql_in_set('p.post_id', array($post_id)) . '
+					AND u.user_id = p.poster_id'
+			));
+
+			$result = $db->sql_query($sql);
+			
+			// Posts are stored in the $rowset array while $attach_list, $user_cache
+			// and the global bbcode_bitfield are built
+			while ($row = $db->sql_fetchrow($result))
+			{
+				// Set max_post_time
+				$max_post_time = $data['post_time'];
+
+				$poster_id = (int) $data['poster_id'];
+
+				// Define the global bbcode bitfield, will be used to load bbcodes
+				$bbcode_bitfield = $bbcode_bitfield | base64_decode($data['bbcode_bitfield']);
+
+				// Is a signature attached? Are we going to display it?
+				if ($data['enable_sig'] && $config['allow_sig'] && $user->optionget('viewsigs'))
+				{
+					$bbcode_bitfield = $bbcode_bitfield | base64_decode($row['user_sig_bbcode_bitfield']);
+				}
+
+				// Cache various user specific data ... so we don't have to recompute
+				// this each time the same user appears on this page
+				if (!isset($user_cache[$poster_id]))
+				{
+					if ($poster_id == ANONYMOUS)
+					{
+						$user_cache[$poster_id] = array(
+							'joined'		=> '',
+							'posts'			=> '',
+							'from'			=> '',
+
+							'sig'					=> '',
+							'sig_bbcode_uid'		=> '',
+							'sig_bbcode_bitfield'	=> '',
+
+							'online'			=> false,
+							'avatar'			=> ($user->optionget('viewavatars')) ? get_user_avatar($row['user_avatar'], $row['user_avatar_type'], $row['user_avatar_width'], $row['user_avatar_height']) : '',
+							'rank_title'		=> '',
+							'rank_image'		=> '',
+							'rank_image_src'	=> '',
+							'sig'				=> '',
+							'profile'			=> '',
+							'pm'				=> '',
+							'email'				=> '',
+							'www'				=> '',
+							'icq_status_img'	=> '',
+							'icq'				=> '',
+							'aim'				=> '',
+							'msn'				=> '',
+							'yim'				=> '',
+							'jabber'			=> '',
+							'search'			=> '',
+							'age'				=> '',
+
+							'username'			=> $row['username'],
+							'user_colour'		=> $row['user_colour'],
+
+							'warnings'			=> 0,
+							'allow_pm'			=> 0,
+						);
+
+						get_user_rank($row['user_rank'], false, $user_cache[$poster_id]['rank_title'], $user_cache[$poster_id]['rank_image'], $user_cache[$poster_id]['rank_image_src']);
+					}
+					else
+					{
+						$user_sig = '';
+
+						// We add the signature to every posters entry because enable_sig is post dependant
+						if ($row['user_sig'] && $config['allow_sig'] && $user->optionget('viewsigs'))
+						{
+							$user_sig = $row['user_sig'];
+						}
+
+						$id_cache[] = $poster_id;
+
+						$user_cache[$poster_id] = array(
+							'joined'		=> $user->format_date($row['user_regdate']),
+							'posts'			=> $row['user_posts'],
+							'warnings'		=> (isset($row['user_warnings'])) ? $row['user_warnings'] : 0,
+							'from'			=> (!empty($row['user_from'])) ? $row['user_from'] : '',
+
+							'sig'					=> $user_sig,
+							'sig_bbcode_uid'		=> (!empty($row['user_sig_bbcode_uid'])) ? $row['user_sig_bbcode_uid'] : '',
+							'sig_bbcode_bitfield'	=> (!empty($row['user_sig_bbcode_bitfield'])) ? $row['user_sig_bbcode_bitfield'] : '',
+
+							'viewonline'	=> $row['user_allow_viewonline'],
+							'allow_pm'		=> $row['user_allow_pm'],
+
+							'avatar'		=> ($user->optionget('viewavatars')) ? get_user_avatar($row['user_avatar'], $row['user_avatar_type'], $row['user_avatar_width'], $row['user_avatar_height']) : '',
+							'age'			=> '',
+
+							'rank_title'		=> '',
+							'rank_image'		=> '',
+							'rank_image_src'	=> '',
+
+							'username'			=> $row['username'],
+							'user_colour'		=> $row['user_colour'],
+
+							'online'		=> false,
+							'profile'		=> append_sid("{$phpbb_root_path}memberlist.$phpEx", "mode=viewprofile&amp;u=$poster_id"),
+							'www'			=> $row['user_website'],
+							'aim'			=> ($row['user_aim'] && $auth->acl_get('u_sendim')) ? append_sid("{$phpbb_root_path}memberlist.$phpEx", "mode=contact&amp;action=aim&amp;u=$poster_id") : '',
+							'msn'			=> ($row['user_msnm'] && $auth->acl_get('u_sendim')) ? append_sid("{$phpbb_root_path}memberlist.$phpEx", "mode=contact&amp;action=msnm&amp;u=$poster_id") : '',
+							'yim'			=> ($row['user_yim']) ? 'http://edit.yahoo.com/config/send_webmesg?.target=' . urlencode($row['user_yim']) . '&amp;.src=pg' : '',
+							'jabber'		=> ($row['user_jabber'] && $auth->acl_get('u_sendim')) ? append_sid("{$phpbb_root_path}memberlist.$phpEx", "mode=contact&amp;action=jabber&amp;u=$poster_id") : '',
+							'search'		=> ($auth->acl_get('u_search')) ? append_sid("{$phpbb_root_path}search.$phpEx", "author_id=$poster_id&amp;sr=posts") : '',
+
+							'author_full'		=> get_username_string('full', $poster_id, $row['username'], $row['user_colour']),
+							'author_colour'		=> get_username_string('colour', $poster_id, $row['username'], $row['user_colour']),
+							'author_username'	=> get_username_string('username', $poster_id, $row['username'], $row['user_colour']),
+							'author_profile'	=> get_username_string('profile', $poster_id, $row['username'], $row['user_colour']),
+						);
+
+						get_user_rank($row['user_rank'], $row['user_posts'], $user_cache[$poster_id]['rank_title'], $user_cache[$poster_id]['rank_image'], $user_cache[$poster_id]['rank_image_src']);
+
+						if ((!empty($row['user_allow_viewemail']) && $auth->acl_get('u_sendemail')) || $auth->acl_get('a_email'))
+						{
+							$user_cache[$poster_id]['email'] = ($config['board_email_form'] && $config['email_enable']) ? append_sid("{$phpbb_root_path}memberlist.$phpEx", "mode=email&amp;u=$poster_id") : (($config['board_hide_emails'] && !$auth->acl_get('a_email')) ? '' : 'mailto:' . $row['user_email']);
+						}
+						else
+						{
+							$user_cache[$poster_id]['email'] = '';
+						}
+
+						if (!empty($row['user_icq']))
+						{
+							$user_cache[$poster_id]['icq'] = 'http://www.icq.com/people/webmsg.php?to=' . $row['user_icq'];
+							$user_cache[$poster_id]['icq_status_img'] = '<img src="http://web.icq.com/whitepages/online?icq=' . $row['user_icq'] . '&amp;img=5" width="18" height="18" alt="" />';
+						}
+						else
+						{
+							$user_cache[$poster_id]['icq_status_img'] = '';
+							$user_cache[$poster_id]['icq'] = '';
+						}
+
+						if ($config['allow_birthdays'] && !empty($row['user_birthday']))
+						{
+							list($bday_day, $bday_month, $bday_year) = array_map('intval', explode('-', $row['user_birthday']));
+
+							if ($bday_year)
+							{
+								$diff = $now['mon'] - $bday_month;
+								if ($diff == 0)
+								{
+									$diff = ($now['mday'] - $bday_day < 0) ? 1 : 0;
+								}
+								else
+								{
+									$diff = ($diff < 0) ? 1 : 0;
+								}
+
+								$user_cache[$poster_id]['age'] = (int) ($now['year'] - $bday_year - $diff);
+							}
+						}
+					}
+				}
+			}
+			$db->sql_freeresult($result);
+			
+			$edit_allowed = ($user->data['is_registered'] && ($auth->acl_get('m_edit', $data['forum_id']) || (
+				$user->data['user_id'] == $poster_id &&
+				$auth->acl_get('f_edit', $data['forum_id']) &&
+				!$row['post_edit_locked'] &&
+				($row['post_time'] > time() - ($config['edit_time'] * 60) || !$config['edit_time'])
+			)));
+
+			$delete_allowed = ($user->data['is_registered'] && ($auth->acl_get('m_delete', $data['forum_id']) || (
+				$user->data['user_id'] == $poster_id &&
+				$auth->acl_get('f_delete', $data['forum_id']) &&
+				$topic_data['topic_last_post_id'] == $row['post_id'] &&
+				($row['post_time'] > time() - ($config['delete_time'] * 60) || !$config['delete_time']) &&
+				// we do not want to allow removal of the last post if a moderator locked it!
+				!$row['post_edit_locked']
+			)));
+			
+			/*
+			* Parse message
+			*/
+			
+			// Add up the flag options...
+			$bbcode_options = (($data['enable_bbcode']) ? OPTION_FLAG_BBCODE : 0) + (($data['enable_smilies']) ? OPTION_FLAG_SMILIES : 0) + (($data['enable_urls']) ? OPTION_FLAG_LINKS : 0);
+			// Parse the post
+			$message = generate_text_for_display($data['message'], $data['bbcode_uid'], $data['bbcode_bitfield'], $bbcode_options);
+			
+			$postrow = array(
+				'POST_AUTHOR_FULL'		=> ($poster_id != ANONYMOUS) ? $user_cache[$poster_id]['author_full'] : get_username_string('full', $poster_id, $row['username'], $row['user_colour'], $row['post_username']),
+				'POST_AUTHOR_COLOUR'	=> ($poster_id != ANONYMOUS) ? $user_cache[$poster_id]['author_colour'] : get_username_string('colour', $poster_id, $row['username'], $row['user_colour'], $row['post_username']),
+				'POST_AUTHOR'			=> ($poster_id != ANONYMOUS) ? $user_cache[$poster_id]['author_username'] : get_username_string('username', $poster_id, $row['username'], $row['user_colour'], $row['post_username']),
+				'U_POST_AUTHOR'			=> ($poster_id != ANONYMOUS) ? $user_cache[$poster_id]['author_profile'] : get_username_string('profile', $poster_id, $row['username'], $row['user_colour'], $row['post_username']),
+
+				'RANK_TITLE'		=> $user_cache[$poster_id]['rank_title'],
+				'RANK_IMG'			=> $user_cache[$poster_id]['rank_image'],
+				'RANK_IMG_SRC'		=> $user_cache[$poster_id]['rank_image_src'],
+				'POSTER_JOINED'		=> $user_cache[$poster_id]['joined'],
+				'POSTER_POSTS'		=> $user_cache[$poster_id]['posts'],
+				'POSTER_FROM'		=> $user_cache[$poster_id]['from'],
+				'POSTER_AVATAR'		=> $user_cache[$poster_id]['avatar'],
+				'POSTER_WARNINGS'	=> $user_cache[$poster_id]['warnings'],
+				'POSTER_AGE'		=> $user_cache[$poster_id]['age'],
+
+				'POST_DATE'			=> $user->format_date($row['post_time'], false, ($view == 'print') ? true : false),
+				'POST_SUBJECT'		=> $row['post_subject'],
+				'MESSAGE'			=> $message,
+				'SIGNATURE'			=> ($row['enable_sig']) ? $user_cache[$poster_id]['sig'] : '',
+				'EDITED_MESSAGE'	=> '',
+				'EDIT_REASON'		=> $row['post_edit_reason'],
+				'BUMPED_MESSAGE'	=> '',
+
+				'MINI_POST_IMG'			=> $user->img('icon_post_target_unread', 'UNREAD_POST'), // it's always unread if we are here
+				'POST_ICON_IMG'			=> ($post_data['enable_icons'] && !empty($row['icon_id'])) ? $icons[$row['icon_id']]['img'] : '',
+				'POST_ICON_IMG_WIDTH'	=> ($post_data['enable_icons'] && !empty($row['icon_id'])) ? $icons[$row['icon_id']]['width'] : '',
+				'POST_ICON_IMG_HEIGHT'	=> ($post_data['enable_icons'] && !empty($row['icon_id'])) ? $icons[$row['icon_id']]['height'] : '',
+				'ICQ_STATUS_IMG'		=> $user_cache[$poster_id]['icq_status_img'],
+				'ONLINE_IMG'			=> ($poster_id == ANONYMOUS || !$config['load_onlinetrack']) ? '' : (($user_cache[$poster_id]['online']) ? $user->img('icon_user_online', 'ONLINE') : $user->img('icon_user_offline', 'OFFLINE')),
+				'S_ONLINE'				=> ($poster_id == ANONYMOUS || !$config['load_onlinetrack']) ? false : (($user_cache[$poster_id]['online']) ? true : false),
+
+				'U_EDIT'			=> ($edit_allowed) ? append_sid("{$phpbb_root_path}posting.$phpEx", "mode=edit&amp;f={$data['forum_id']}&amp;p={$row['post_id']}") : '',
+				'U_QUOTE'			=> ($auth->acl_get('f_reply', $data['forum_id'])) ? append_sid("{$phpbb_root_path}posting.$phpEx", "mode=quote&amp;f={$data['forum_id']}&amp;p={$row['post_id']}") : '',
+				'U_INFO'			=> ($auth->acl_get('m_info', $data['forum_id'])) ? append_sid("{$phpbb_root_path}mcp.$phpEx", "i=main&amp;mode=post_details&amp;f={$data['forum_id']}&amp;p=" . $row['post_id'], true, $user->session_id) : '',
+				'U_DELETE'			=> ($delete_allowed) ? append_sid("{$phpbb_root_path}posting.$phpEx", "mode=delete&amp;f={$data['forum_id']}&amp;p={$row['post_id']}") : '',
+
+				'U_PROFILE'		=> $user_cache[$poster_id]['profile'],
+				'U_SEARCH'		=> $user_cache[$poster_id]['search'],
+				'U_PM'			=> ($poster_id != ANONYMOUS && $config['allow_privmsg'] && $auth->acl_get('u_sendpm') && ($user_cache[$poster_id]['allow_pm'] || $auth->acl_gets('a_', 'm_') || $auth->acl_getf_global('m_'))) ? append_sid("{$phpbb_root_path}ucp.$phpEx", 'i=pm&amp;mode=compose&amp;action=quotepost&amp;p=' . $row['post_id']) : '',
+				'U_EMAIL'		=> $user_cache[$poster_id]['email'],
+				'U_WWW'			=> $user_cache[$poster_id]['www'],
+				'U_ICQ'			=> $user_cache[$poster_id]['icq'],
+				'U_AIM'			=> $user_cache[$poster_id]['aim'],
+				'U_MSN'			=> $user_cache[$poster_id]['msn'],
+				'U_YIM'			=> $user_cache[$poster_id]['yim'],
+				'U_JABBER'		=> $user_cache[$poster_id]['jabber'],
+
+				'U_REPORT'			=> ($auth->acl_get('f_report', $data['forum_id'])) ? append_sid("{$phpbb_root_path}report.$phpEx", 'f=' . $data['forum_id'] . '&amp;p=' . $row['post_id']) : '',
+				'U_MCP_REPORT'		=> ($auth->acl_get('m_report', $data['forum_id'])) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=reports&amp;mode=report_details&amp;f=' . $data['forum_id'] . '&amp;p=' . $row['post_id'], true, $user->session_id) : '',
+				'U_MCP_APPROVE'		=> ($auth->acl_get('m_approve', $data['forum_id'])) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=queue&amp;mode=approve_details&amp;f=' . $data['forum_id'] . '&amp;p=' . $row['post_id'], true, $user->session_id) : '',
+				'U_MINI_POST'		=> append_sid("{$phpbb_root_path}viewtopic.$phpEx", 'p=' . $row['post_id']) . (($post_data['topic_type'] == POST_GLOBAL) ? '&amp;f=' . $data['forum_id'] : '') . '#p' . $row['post_id'],
+				'U_NEXT_POST_ID'	=> '',
+				'U_PREV_POST_ID'	=> $post_data['topic_last_post_id'],
+				'U_NOTES'			=> ($auth->acl_getf_global('m_')) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=notes&amp;mode=user_notes&amp;u=' . $poster_id, true, $user->session_id) : '',
+				'U_WARN'			=> ($auth->acl_get('m_warn') && $poster_id != $user->data['user_id'] && $poster_id != ANONYMOUS) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=warn&amp;mode=warn_post&amp;f=' . $data['forum_id'] . '&amp;p=' . $row['post_id'], true, $user->session_id) : '',
+
+				'POST_ID'			=> $row['post_id'],
+				'POSTER_ID'			=> $poster_id,
+
+				'S_HAS_ATTACHMENTS'	=> (!empty($attachments[$row['post_id']])) ? true : false,
+				'S_POST_UNAPPROVED'	=> ($data['post_approved']) ? false : true,
+				'S_POST_REPORTED'	=> false,
+				'S_DISPLAY_NOTICE'	=> false,
+				'S_FRIEND'			=> ($row['friend']) ? true : false,
+				'S_UNREAD_POST'		=> true,
+				'S_FIRST_UNREAD'	=> true,
+				'S_CUSTOM_FIELDS'	=> (isset($cp_row['row']) && sizeof($cp_row['row'])) ? true : false,
+				'S_TOPIC_POSTER'	=> ($post_data['topic_poster'] == $poster_id) ? true : false,
+
+				'S_IGNORE_POST'		=> ($row['hide_post']) ? true : false,
+				'L_IGNORE_POST'		=> ($row['hide_post']) ? sprintf($user->lang['POST_BY_FOE'], get_username_string('full', $poster_id, $row['username'], $row['user_colour'], $row['post_username']), '<a href="' . $viewtopic_url . "&amp;p={$row['post_id']}&amp;view=show#p{$row['post_id']}" . '">', '</a>') : '',
+			);
+
+			// Dump vars into template
+			$template->assign_block_vars('postrow', $postrow);
+			
+			
+			
+			
+			
+			
+			
+			
+			$this->load_tpl = true;
+			
+			$this->tpl_file = 'jquery_base/quickreply.html';
 		}
 		
 		
