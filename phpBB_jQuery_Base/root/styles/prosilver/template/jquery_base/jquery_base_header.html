@@ -380,6 +380,18 @@ function quickreply(success)
 	{
 		//pjB_output_info(success['SUCCESS_TITLE'], success['SUCCESS_MESSAGE'], true);
 		$('#pjb-quickreply').html($('#pjb-quickreply').html() + success);
+		
+		var cur_id = '';
+		/*
+		* using this we can get the last id of our quickreply
+		* this should be done using the :last select, unfortunately this doesn't work
+		*/
+		$('#pjb-quickreply').children().each( function () {
+			cur_id = $(this).attr('id');
+		});
+
+		$('#qr_editor_div textarea.inputbox').val('');
+		$('#' + cur_id).fadeIn('slow');
 	}
 }
 
@@ -426,7 +438,7 @@ function qe_do_ajax(mode, data, use_json)
 	$.ajax({
 		type: 'POST',
 		data: data,
-		dataType: datatype,
+		dataType: 'auto',
 		url: '{U_JQUERY_BASE}',
 		success: function(data){
 			switch(mode)

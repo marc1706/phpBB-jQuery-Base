@@ -808,7 +808,6 @@ class phpbb_jquery_base
 		}
 		
 		$reply_data['subject'] = utf8_normalize_nfc(request_var('subject', '', true));
-		$reply_data['message'] = utf8_normalize_nfc(request_var('message', '', true));
 		
 		// set basic data
 		if (!$reply_data['topic_id'])
@@ -953,7 +952,7 @@ class phpbb_jquery_base
 		
 		// now begin preparing for submitting this reply
 		$post_data['topic_cur_post_id']	= request_var('topic_cur_post_id', 0);
-		$post_data['post_subject']		= utf8_normalize_nfc(request_var('subject', '', true));
+		$post_data['post_subject']		= $reply_data['subject'];
 		$message_parser->message		= utf8_normalize_nfc(request_var('message', '', true));
 
 		$post_data['post_edit_reason']	= '';
@@ -1125,6 +1124,7 @@ class phpbb_jquery_base
 				'post_checksum'			=> (isset($post_data['post_checksum'])) ? (string) $post_data['post_checksum'] : '',
 				'post_edit_reason'		=> $post_data['post_edit_reason'],
 				'post_edit_user'		=> (isset($post_data['post_edit_user'])) ? (int) $post_data['post_edit_user'] : 0,
+				'post_subject'			=> $post_data['post_subject'],
 				'forum_parents'			=> $post_data['forum_parents'],
 				'forum_name'			=> $post_data['forum_name'],
 				'notify'				=> $notify,
@@ -1153,9 +1153,6 @@ class phpbb_jquery_base
 			
 			// Now get the post id of the new post
 			$post_id = $data['post_id'];
-			
-			//print_r($data);
-			//die;
 			
 			// Now let's start with the viewtopic part of this function
 			global $phpbb_root_path, $phpEx;
@@ -1352,7 +1349,7 @@ class phpbb_jquery_base
 			$delete_allowed = ($user->data['is_registered'] && ($auth->acl_get('m_delete', $data['forum_id']) || (
 				$user->data['user_id'] == $poster_id &&
 				$auth->acl_get('f_delete', $data['forum_id']) &&
-				$topic_data['topic_last_post_id'] == $row['post_id'] &&
+				$topic_data['topic_last_post_id'] == $post_id &&
 				($row['post_time'] > time() - ($config['delete_time'] * 60) || !$config['delete_time']) &&
 				// we do not want to allow removal of the last post if a moderator locked it!
 				!$row['post_edit_locked']
@@ -1384,7 +1381,7 @@ class phpbb_jquery_base
 				'POSTER_AGE'		=> $user_cache[$poster_id]['age'],
 
 				'POST_DATE'			=> $user->format_date($row['post_time'], false, ($view == 'print') ? true : false),
-				'POST_SUBJECT'		=> $row['post_subject'],
+				'POST_SUBJECT'		=> $data['post_subject'],
 				'MESSAGE'			=> $message,
 				'SIGNATURE'			=> ($row['enable_sig']) ? $user_cache[$poster_id]['sig'] : '',
 				'EDITED_MESSAGE'	=> '',
@@ -1399,14 +1396,14 @@ class phpbb_jquery_base
 				'ONLINE_IMG'			=> ($poster_id == ANONYMOUS || !$config['load_onlinetrack']) ? '' : (($user_cache[$poster_id]['online']) ? $user->img('icon_user_online', 'ONLINE') : $user->img('icon_user_offline', 'OFFLINE')),
 				'S_ONLINE'				=> ($poster_id == ANONYMOUS || !$config['load_onlinetrack']) ? false : (($user_cache[$poster_id]['online']) ? true : false),
 
-				'U_EDIT'			=> ($edit_allowed) ? append_sid("{$phpbb_root_path}posting.$phpEx", "mode=edit&amp;f={$data['forum_id']}&amp;p={$row['post_id']}") : '',
-				'U_QUOTE'			=> ($auth->acl_get('f_reply', $data['forum_id'])) ? append_sid("{$phpbb_root_path}posting.$phpEx", "mode=quote&amp;f={$data['forum_id']}&amp;p={$row['post_id']}") : '',
-				'U_INFO'			=> ($auth->acl_get('m_info', $data['forum_id'])) ? append_sid("{$phpbb_root_path}mcp.$phpEx", "i=main&amp;mode=post_details&amp;f={$data['forum_id']}&amp;p=" . $row['post_id'], true, $user->session_id) : '',
-				'U_DELETE'			=> ($delete_allowed) ? append_sid("{$phpbb_root_path}posting.$phpEx", "mode=delete&amp;f={$data['forum_id']}&amp;p={$row['post_id']}") : '',
+				'U_EDIT'			=> ($edit_allowed) ? append_sid("{$phpbb_root_path}posting.$phpEx", "mode=edit&amp;f={$data['forum_id']}&amp;p=$post_id") : '',
+				'U_QUOTE'			=> ($auth->acl_get('f_reply', $data['forum_id'])) ? append_sid("{$phpbb_root_path}posting.$phpEx", "mode=quote&amp;f={$data['forum_id']}&amp;p=$post_id") : '',
+				'U_INFO'			=> ($auth->acl_get('m_info', $data['forum_id'])) ? append_sid("{$phpbb_root_path}mcp.$phpEx", "i=main&amp;mode=post_details&amp;f={$data['forum_id']}&amp;p=" . $post_id, true, $user->session_id) : '',
+				'U_DELETE'			=> ($delete_allowed) ? append_sid("{$phpbb_root_path}posting.$phpEx", "mode=delete&amp;f={$data['forum_id']}&amp;p=$post_id") : '',
 
 				'U_PROFILE'		=> $user_cache[$poster_id]['profile'],
 				'U_SEARCH'		=> $user_cache[$poster_id]['search'],
-				'U_PM'			=> ($poster_id != ANONYMOUS && $config['allow_privmsg'] && $auth->acl_get('u_sendpm') && ($user_cache[$poster_id]['allow_pm'] || $auth->acl_gets('a_', 'm_') || $auth->acl_getf_global('m_'))) ? append_sid("{$phpbb_root_path}ucp.$phpEx", 'i=pm&amp;mode=compose&amp;action=quotepost&amp;p=' . $row['post_id']) : '',
+				'U_PM'			=> ($poster_id != ANONYMOUS && $config['allow_privmsg'] && $auth->acl_get('u_sendpm') && ($user_cache[$poster_id]['allow_pm'] || $auth->acl_gets('a_', 'm_') || $auth->acl_getf_global('m_'))) ? append_sid("{$phpbb_root_path}ucp.$phpEx", 'i=pm&amp;mode=compose&amp;action=quotepost&amp;p=' . $post_id) : '',
 				'U_EMAIL'		=> $user_cache[$poster_id]['email'],
 				'U_WWW'			=> $user_cache[$poster_id]['www'],
 				'U_ICQ'			=> $user_cache[$poster_id]['icq'],
@@ -1415,19 +1412,19 @@ class phpbb_jquery_base
 				'U_YIM'			=> $user_cache[$poster_id]['yim'],
 				'U_JABBER'		=> $user_cache[$poster_id]['jabber'],
 
-				'U_REPORT'			=> ($auth->acl_get('f_report', $data['forum_id'])) ? append_sid("{$phpbb_root_path}report.$phpEx", 'f=' . $data['forum_id'] . '&amp;p=' . $row['post_id']) : '',
-				'U_MCP_REPORT'		=> ($auth->acl_get('m_report', $data['forum_id'])) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=reports&amp;mode=report_details&amp;f=' . $data['forum_id'] . '&amp;p=' . $row['post_id'], true, $user->session_id) : '',
-				'U_MCP_APPROVE'		=> ($auth->acl_get('m_approve', $data['forum_id'])) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=queue&amp;mode=approve_details&amp;f=' . $data['forum_id'] . '&amp;p=' . $row['post_id'], true, $user->session_id) : '',
-				'U_MINI_POST'		=> append_sid("{$phpbb_root_path}viewtopic.$phpEx", 'p=' . $row['post_id']) . (($post_data['topic_type'] == POST_GLOBAL) ? '&amp;f=' . $data['forum_id'] : '') . '#p' . $row['post_id'],
+				'U_REPORT'			=> ($auth->acl_get('f_report', $data['forum_id'])) ? append_sid("{$phpbb_root_path}report.$phpEx", 'f=' . $data['forum_id'] . '&amp;p=' . $post_id) : '',
+				'U_MCP_REPORT'		=> ($auth->acl_get('m_report', $data['forum_id'])) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=reports&amp;mode=report_details&amp;f=' . $data['forum_id'] . '&amp;p=' . $post_id, true, $user->session_id) : '',
+				'U_MCP_APPROVE'		=> ($auth->acl_get('m_approve', $data['forum_id'])) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=queue&amp;mode=approve_details&amp;f=' . $data['forum_id'] . '&amp;p=' . $post_id, true, $user->session_id) : '',
+				'U_MINI_POST'		=> append_sid("{$phpbb_root_path}viewtopic.$phpEx", 'p=' . $post_id) . (($post_data['topic_type'] == POST_GLOBAL) ? '&amp;f=' . $data['forum_id'] : '') . '#p' . $post_id,
 				'U_NEXT_POST_ID'	=> '',
 				'U_PREV_POST_ID'	=> $post_data['topic_last_post_id'],
 				'U_NOTES'			=> ($auth->acl_getf_global('m_')) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=notes&amp;mode=user_notes&amp;u=' . $poster_id, true, $user->session_id) : '',
-				'U_WARN'			=> ($auth->acl_get('m_warn') && $poster_id != $user->data['user_id'] && $poster_id != ANONYMOUS) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=warn&amp;mode=warn_post&amp;f=' . $data['forum_id'] . '&amp;p=' . $row['post_id'], true, $user->session_id) : '',
+				'U_WARN'			=> ($auth->acl_get('m_warn') && $poster_id != $user->data['user_id'] && $poster_id != ANONYMOUS) ? append_sid("{$phpbb_root_path}mcp.$phpEx", 'i=warn&amp;mode=warn_post&amp;f=' . $data['forum_id'] . '&amp;p=' . $post_id, true, $user->session_id) : '',
 
-				'POST_ID'			=> $row['post_id'],
+				'POST_ID'			=> $post_id,
 				'POSTER_ID'			=> $poster_id,
 
-				'S_HAS_ATTACHMENTS'	=> (!empty($attachments[$row['post_id']])) ? true : false,
+				'S_HAS_ATTACHMENTS'	=> (!empty($attachments[$post_id])) ? true : false,
 				'S_POST_UNAPPROVED'	=> ($data['post_approved']) ? false : true,
 				'S_POST_REPORTED'	=> false,
 				'S_DISPLAY_NOTICE'	=> false,
@@ -1438,7 +1435,7 @@ class phpbb_jquery_base
 				'S_TOPIC_POSTER'	=> ($post_data['topic_poster'] == $poster_id) ? true : false,
 
 				'S_IGNORE_POST'		=> ($row['hide_post']) ? true : false,
-				'L_IGNORE_POST'		=> ($row['hide_post']) ? sprintf($user->lang['POST_BY_FOE'], get_username_string('full', $poster_id, $row['username'], $row['user_colour'], $row['post_username']), '<a href="' . $viewtopic_url . "&amp;p={$row['post_id']}&amp;view=show#p{$row['post_id']}" . '">', '</a>') : '',
+				'L_IGNORE_POST'		=> ($row['hide_post']) ? sprintf($user->lang['POST_BY_FOE'], get_username_string('full', $poster_id, $row['username'], $row['user_colour'], $row['post_username']), '<a href="' . $viewtopic_url . "&amp;p=$post_id&amp;view=show#p$post_id" . '">', '</a>') : '',
 			);
 
 			// Dump vars into template
