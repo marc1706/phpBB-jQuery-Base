@@ -95,6 +95,7 @@ $(document).ready(function(){
 	$("#container").notify();
 	
 	// show "new" PM popup
+	<!-- IF S_USER_PM_POPUP -->
 	if ({S_NEW_PM})
 	{
 		if(logged_in)
@@ -106,6 +107,7 @@ $(document).ready(function(){
 			pjB_output_info('<a id="popupHeader" href="{U_PRIVATEMSGS}">{PRIVATE_MESSAGE_INFO}</a>', '{L_LOGIN_CHECK_PM}', false);
 		}
 	}
+	<!-- ENDIF -->
 });
 
 /*
