@@ -1,6 +1,6 @@
 <!-- @todo: Add all code that needs to be executed in the header here -->
 <link href="{T_THEME_PATH}/jquery_base.css" rel="stylesheet" type="text/css" />
-<script src="{T_TEMPLATE_PATH}/jquery_base/jquery-1.4.3.min.js" type="text/javascript"></script>
+<script src="{T_TEMPLATE_PATH}/jquery_base/jquery-1.5.min.js" type="text/javascript"></script>
 <script src="{T_TEMPLATE_PATH}/jquery_base/jquery-ui-1.8.9.custom.min.js" type="text/javascript"></script>
 <script src="{T_TEMPLATE_PATH}/jquery_base/jquery.notify.min.js" type="text/javascript"></script>
 
@@ -39,8 +39,8 @@ $(document).ready(function(){
 		// check if quick edit is already enabled
 		if(popup_open != true)
 		{
-			qe_centerPopup(); 
-			qe_loadPopup();
+			//qe_centerPopup(); 
+			//qe_loadPopup();
 			cur_location = $(location).attr('href');
 			data = 'mode=quickedit&qe_mode=init&post_id=' + post_id + '&location=' + location;
 			qe_do_ajax('open', data, false);
@@ -107,104 +107,6 @@ $(document).ready(function(){
 		}
 	}
 });
-// load the jQuery popup
-function qe_loadPopup()
-{
-	$("#quickeditBackground").css({"opacity": "0.7"});
-	// Now let's make sure we actually see the image
-	var scroll = $(window).scrollTop();
-	$("#popupQuickedit").animate({marginTop: scroll}, 'fast', function() {
-		// Animation complete.
-		});
-	$("#quickeditBackground").fadeIn("slow");
-	$("#popupQuickedit").fadeIn("slow");
-}
-
-//centering popup
-function qe_centerPopup()
-{
-	//request data for centering
-	var windowWidth = document.documentElement.clientWidth;
-	var windowHeight = document.documentElement.clientHeight;
-	var popupHeight = $("#popupQuickedit").height();
-	var popupWidth = $("#popupQuickedit").width();
-	//centering
-	$("#popupQuickedit").css({
-	"position": "absolute",
-	"top": windowHeight/2-popupHeight/2,
-	"left": windowWidth/2-popupWidth/2
-	});
-	//only need force for IE6
-	$("#quickeditBackground").css({"height": windowHeight});
-}
-
-// close the pop up
-function qe_disablePopup()
-{
-	$("#quickeditBackground").fadeOut("slow");
-	$("#popupQuickedit").fadeOut("slow");
-}
-
-// load the jQuery popup
-function loadQEError()
-{
-	$("#quickeditErrorBG").css({"opacity": "0.7"});
-	$("#quickeditErrorBG").fadeIn("slow");
-	$("#quickeditError").fadeIn("slow");
-	qe_bind_error_msg();
-}
-
-//centering popup
-function centerQEError()
-{		
-	var windowHeight = document.documentElement.clientHeight;
-	var windowWidth = (document.documentElement.clientWidth);	
-	//request data for centering
-	var popupWidth = $('#popupQuickedit').width();
-	var errorWidth = 250;
-	var errorHeight = windowHeight * 0.1;
-	var popupHeight = $('#popupQuickedit').height();
-	var popupOffset = $('#popupQuickedit').offset();
-	var popupLeft = popupOffset.left;
-	var newTop = (popupHeight/2) - (errorHeight/2);
-	var newLeft = (popupWidth/2) - (errorWidth/2) + popupLeft;
-	//centering
-	$('#quickeditError').css({
-	"position": "absolute",
-	"top": newTop,
-	"left": newLeft
-	});
-	//only need force for IE6
-	$("#quickeditErrorBG").css({"height": windowHeight});
-}
-
-// close the pop up
-function disableQEError()
-{
-	$("#quickeditErrorBG").fadeOut("slow");
-	$("#quickeditError").fadeOut("slow");
-}
-
-/* 
-* bind the Error events if an error occurs
-*/
-function qe_bind_error_msg()
-{
-	// Click on error window
-	$('#quickeditError').bind('click',function() {
-		var cur_action = $('#quickeditAction').html();
-		if(cur_action == 'cancel')
-		{
-			disableQEError();
-			qe_disablePopup();
-			quickedit_open = false;
-		}
-		else if(cur_action == 'return')
-		{
-			disableQEError();
-		}
-	});
-}
 
 /*
 * Onclick functions for BBCode buttons
@@ -253,16 +155,15 @@ function bind_quickedit_buttons()
 	});
 	
 	// click on "advanced edit"
-	$('#adv_jqe').bind('click', function() {
+	$('#adv_jqe').bind('mouseover', function() {
 		if(quickedit_open == true)
 		{
 			// get current url for forum_id if we have a global announcement
 			cur_location = $(location).attr('href');
-			content = $('textarea#jqe-message').serialize();
-			content = content.substring(8); // make sure we get rid of the 'message=' in front of the post text
+			content = $('textarea#jqe-message').val();
 			data = 'mode=quickedit&qe_mode=advanced_edit&post_id=' + post_id + '&contents=' + content + '&location=' + location;
-			qe_do_ajax('advanced_edit', data, true);
-			return false;
+			$('input[name="message"]:hidden').val(content);
+			//qe_do_ajax('advanced_edit', data, true);
 		}
 	});
 }
@@ -270,78 +171,110 @@ function bind_quickedit_buttons()
 // open edit window
 function open_edit(success)
 {
-	$('#popupQuickedit').html(success);
-	if($('#quickeditError').html() != '')
+	var is_error = false;
+	
+	try
 	{
-		centerQEError();
-		loadQEError();
+	  var return_ary = JSON.parse(success);
+	  is_error = true;
+	}
+	catch(e)
+	{
+	  is_error = false;
+	}
+	
+	if(is_error)
+	{
+		for(i = 0; i < return_ary['ERROR_COUNT']; i++)
+		{
+			pjB_output_info('', return_ary['ERROR'][i], true);
+		}
 	}
 	else
 	{
+		$('#post' + cur_post_id + ' div.content').hide();
+		$('#post' + cur_post_id + ' div.notice').hide();
+		$('#post' + cur_post_id + ' dl.attachbox').hide();
+		$('#post' + cur_post_id).append(success);
+		$('#pjB-qe-form').show('slow');
 		bind_quickedit_buttons();
+		quickedit_open = true;
 	}
 }
 
 // submit edit
 function submit_edit(data)
 {
-	var return_data = data.split('{/qe_seperator}');
-	var qe_error = return_data[0];
-	var qe_action = return_data[1];
-	var edited_by = return_data[2];
-	var post_text = return_data[3];
-	
-	// if someone actually writes '{/qe_seperator}' into the post_text, we don't want to leave half the text behind
-	if(return_data.length > 4)
+	if(data['ERROR'])
 	{
-		var i_end = return_data.length - 1;
-		for(i = 4; i <= i_end; i++)
+		for(i = 0; i < data['ERROR_COUNT']; i++)
 		{
-			post_text = post_text + '{/qe_seperator}' + return_data[i];
+			pjB_output_info('', data['ERROR'][i], true);
 		}
-	}
-	
-	if(qe_error != false)
-	{
-		$('#quickeditError').html(qe_error);
-		$('#quickeditAction').html(qe_action);
-		centerQEError();
-		loadQEError();
+		
+		if(data['ERROR_ACTION'] == 'cancel')
+		{
+			cancel_edit();
+		}
 	}
 	else
 	{
-		var cur_div = quickedit_div.replace(/\%d/, cur_post_id);
-		$(cur_div).html(post_text);
-		if(edited_by != false)
-		{
-			var cur_edited_by_div = edited_by_div.replace(/\%d/, cur_post_id);
-			$(cur_edited_by_div).html(edited_by); // does not work with subsilver2
-		}
-		$('textarea#jqe-message').val(''); // make sure the user can't see what was in the textbox after clicking cancel
-		qe_disablePopup();
+		$('#post' + cur_post_id + ' div.content').html(data['TEXT']);
+		$('#post' + cur_post_id + ' div.notice').html(data['EDITED_BY']);
+		$('#pjB-qe-form').hide('slow');
+		$('#pjB-qe-form').remove();
+		$('#post' + cur_post_id + ' div.content').show('slow');
+		$('#post' + cur_post_id + ' dl.attachbox').show('slow');
+		$('#post' + cur_post_id + ' div.notice').show('slow');
+		pjB_output_info(data['SUCCESS_TITLE'], data['SUCCESS_MESSAGE'], true);
+		
 		quickedit_open = false;
+		popup_open = false;
 	}
 }
 
 // cancel quickedit
 function cancel_edit()
 {
-	qe_disablePopup();
+	$('#pjB-qe-form').hide('slow');
+	$('#pjB-qe-form').remove();
+	$('#post' + cur_post_id + ' div.content').show('slow');
+	$('#post' + cur_post_id + ' dl.attachbox').show('slow');
+	$('#post' + cur_post_id + ' div.notice').show('slow');
 	quickedit_open = false;
+	popup_open = false;
 }
 
 // open advanced edit
 function advanced_edit(success)
 {
-	$('#popupQuickedit').html(success);
-	if($('#quickeditError').html() != '')
+	//$('#popupQuickedit').html(success);
+	alert(success);
+	var is_error = false;
+	
+	try
 	{
-		centerQEError();
-		loadQEError();
+		var return_ary = JSON.parse(success);
+		is_error = true;
+	}
+	catch(e)
+	{
+		is_error = false;
+	}
+	
+	if(is_error)
+	{
+		for(i = 0; i < return_ary['ERROR_COUNT']; i++)
+		{
+			pjB_output_info('', return_ary['ERROR'][i], true);
+		}
 	}
 	else
 	{
-		$('#jqe-adv-form').submit();
+		$('#pjB-qe-form').remove();
+		$('#post' + cur_post_id).append(success);
+		$('#pjB-adv-form').submit();
+		quickedit_open = true;
 	}
 }
 
@@ -372,12 +305,12 @@ function quickreply(success)
 	
 	try
 	{
-	  var return_ary = JSON.parse(success);
-	  is_error = true;
+		var return_ary = JSON.parse(success);
+		is_error = true;
 	}
 	catch(e)
 	{
-	  is_error = false;
+		is_error = false;
 	}
 
 	
@@ -403,6 +336,16 @@ function quickreply(success)
 
 		$('#qr_editor_div textarea.inputbox').val('');
 		$('#' + cur_id).fadeIn('slow');
+		
+		try
+		{
+			var success_msg = JSON.parse($('#' + cur_id + ' .success-msg').html());
+			pjB_output_info(success_msg['SUCCESS_TITLE'], success_msg['SUCCESS_MESSAGE'], true)
+		}
+		catch(e)
+		{
+			// don't care
+		}
 	}
 }
 

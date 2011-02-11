@@ -1,24 +1,25 @@
-	<form id="jqe-adv-form" action="{U_ADVANCED_EDIT}" method="post">
+<div id="pjB-qe-form">	
+	<form id="pjB-adv-form" action="{U_ADVANCED_EDIT}" method="post">
 	<!-- IF S_BBCODE_ALLOWED -->
-	<div id="quickedit-buttons" style="font-family:Verdana,Helvetica,Arial,sans-serif; font-size: 1.1 em;">
-		<input type="button" value=" B " id="bbcode0" class="button2" style="width: 30px; font-size:0.85em; font-weight:bold;" title="{L_BBCODE_B_HELP}" />
-		<input type="button" value=" i " id="bbcode2" class="button2" style="width: 30px; font-size:0.85em; font-style: italic;" title="{L_BBCODE_I_HELP}" />
-		<input type="button" value=" u " id="bbcode4" class="button2" style="width: 30px; font-size:0.85em; text-decoration: underline;" title="{L_BBCODE_U_HELP}" />
+	<div id="quickedit-buttons" style="font-family:Verdana,Helvetica,Arial,sans-serif;">
+		<input type="button" value=" B " id="bbcode0" class="button2" style="width: 30px; font-size:0.9em; font-weight:bold;" title="{L_BBCODE_B_HELP}" />
+		<input type="button" value=" i " id="bbcode2" class="button2" style="width: 30px; font-size:0.9em; font-style: italic;" title="{L_BBCODE_I_HELP}" />
+		<input type="button" value=" u " id="bbcode4" class="button2" style="width: 30px; font-size:0.9em; text-decoration: underline;" title="{L_BBCODE_U_HELP}" />
 		<!-- IF S_BBCODE_QUOTE -->
-			<input type="button" value="Quote" id="bbcode6" class="button2" style="width: 30px; font-size:0.85em;" title="{L_BBCODE_Q_HELP}" />
+			<input type="button" value="Quote" id="bbcode6" class="button2" style="width: 30px; font-size:0.9em;" title="{L_BBCODE_Q_HELP}" />
 		<!-- ENDIF -->
-		<input type="button" value="Code" id="bbcode8" class="button2" style="width: 30px; font-size:0.85em;" title="{L_BBCODE_C_HELP}" />
-		<input type="button" value="List" id="bbcode10" class="button2" style="width: 30px; font-size:0.85em;" title="{L_BBCODE_L_HELP}" />
-		<input type="button" value="List=" id="bbcode12" class="button2" style="width: 30px; font-size:0.85em;" title="{L_BBCODE_O_HELP}" />
-		<input type="button" value="[*]" id="bbcode-1" class="button2" style="width: 30px; font-size:0.85em;" title="{L_BBCODE_LISTITEM_HELP}" />
+		<input type="button" value="Code" id="bbcode8" class="button2" style="width: 30px; font-size:0.9em;" title="{L_BBCODE_C_HELP}" />
+		<input type="button" value="List" id="bbcode10" class="button2" style="width: 30px; font-size:0.9em;" title="{L_BBCODE_L_HELP}" />
+		<input type="button" value="List=" id="bbcode12" class="button2" style="width: 30px; font-size:0.9em;" title="{L_BBCODE_O_HELP}" />
+		<input type="button" value="[*]" id="bbcode-1" class="button2" style="width: 30px; font-size:0.9em;" title="{L_BBCODE_LISTITEM_HELP}" />
 		<!-- IF S_BBCODE_IMG -->
-			<input type="button" value="Img" id="bbcode14" class="button2" style="width: 30px; font-size:0.85em;" title="{L_BBCODE_P_HELP}" />
+			<input type="button" value="Img" id="bbcode14" class="button2" style="width: 30px; font-size:0.9em;" title="{L_BBCODE_P_HELP}" />
 		<!-- ENDIF -->
 		<!-- IF S_LINKS_ALLOWED -->	
-			<input type="button" value="URL" id="bbcode16" class="button2" style="width: 30px; font-size:0.85em;" title="{L_BBCODE_W_HELP}" />
+			<input type="button" value="URL" id="bbcode16" class="button2" style="width: 30px; font-size:0.9em;" title="{L_BBCODE_W_HELP}" />
 		<!-- ENDIF -->
 		<!-- IF S_BBCODE_FLASH -->
-			<input type="button" value="Flash" id="bbcode18" class="button2" style="width: 30px; font-size:0.85em;" title="{L_BBCODE_D_HELP}" />
+			<input type="button" value="Flash" id="bbcode18" class="button2" style="width: 30px; font-size:0.9em;" title="{L_BBCODE_D_HELP}" />
 		<!-- ENDIF -->
 		<select id="addbbcode202" name="addbbcode202" title="{L_BBCODE_F_HELP}">
 				<option value="50">{L_FONT_TINY}</option>
@@ -32,12 +33,12 @@
 				<!-- ENDIF -->
 		</select>
 		<!-- BEGIN custom_tags -->
-			<input type="button" class="button2" value="{custom_tags.BBCODE_TAG}" id="bbcode{custom_tags.BBCODE_ID}" title="{custom_tags.BBCODE_HELPLINE}" style="width: 30px; font-size:0.85em;" />
+			<input type="button" class="button2" value="{custom_tags.BBCODE_TAG}" id="bbcode{custom_tags.BBCODE_ID}" title="{custom_tags.BBCODE_HELPLINE}" style="width: 30px; font-size:0.9em;" />
 		<!-- END custom_tags -->
 	</div>
 	<!-- ENDIF -->
 	<div id="jqe-message-box">
-		<textarea name="message" id="jqe-message" class="inputbox" rows="15" cols="76" onselect="qe_storeCaret(this);" onclick="qe_storeCaret(this);" onkeyup="qe_storeCaret(this);" onfocus="qe_initInsertions();" style="font-size: 1.0em;" >{POST_TEXT}</textarea><br />
+		<textarea name="message" id="jqe-message" class="inputbox" rows="15" cols="76" onselect="qe_storeCaret(this);" onclick="qe_storeCaret(this);" onkeyup="qe_storeCaret(this);" onfocus="qe_initInsertions();" >{POST_TEXT}</textarea><br />
 		<br />
 	</div>
 	<fieldset id="jqe-adv-fieldset">
@@ -48,9 +49,6 @@
 	{S_FORM_TOKEN}
 	</fieldset>
 	</form>
-	<div id="quickeditErrorBG"></div>
-	<div id="quickeditError">{QE_ERROR}</div>
-	<div id="quickeditAction">{QE_ERROR_ACTION}</div>
 	<script type="text/javascript">
 	// <![CDATA[
 	/*
@@ -63,3 +61,4 @@
 	
 	// ]]>
 	</script>
+</div>

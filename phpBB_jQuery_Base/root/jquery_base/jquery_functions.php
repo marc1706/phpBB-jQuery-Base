@@ -285,6 +285,47 @@ class phpbb_jquery_base
 				$text = utf8_normalize_nfc($row['post_text']);
 				$text = generate_text_for_edit($text, $row['bbcode_uid'], '');
 				
+				// generate hidden fields for form
+				global $phpbb_root_path, $phpEx;
+				
+				// this is just for the attachment_data
+				$message_parser = new parse_message();
+				
+				$message_parser->message = $text['text'];
+				
+				// Always check if the submitted attachment data is valid and belongs to the user.
+				// Further down (especially in submit_post()) we do not check this again.
+				$message_parser->get_submitted_attachment_data($row['poster_id']);
+
+				if ($row['post_attachment'])
+				{
+					// Do not change to SELECT *
+					$sql = 'SELECT attach_id, is_orphan, attach_comment, real_filename
+						FROM ' . ATTACHMENTS_TABLE . '
+						WHERE post_msg_id = ' . (int) $this->post_id . '
+							AND in_message = 0
+							AND is_orphan = 0
+						ORDER BY filetime DESC';
+					$result = $db->sql_query($sql);
+					$message_parser->attachment_data = array_merge($message_parser->attachment_data, $db->sql_fetchrowset($result));
+					$db->sql_freeresult($result);
+				}
+					
+				$s_hidden_fields = '<input type="hidden" name="lastclick" value="' . time() . '" />';
+				$s_hidden_fields .= build_hidden_fields(array(
+					'edit_post_message_checksum'	=> $row['post_checksum'],
+					'edit_post_subject_checksum'	=> (isset($post_data['post_subject'])) ? md5($row['post_subject']) : '',
+					'message'						=> $text['text'],
+					'full_editor' 					=> true,
+					'subject'						=> $row['post_subject'],
+					'attachment_data' 				=> $message_parser->attachment_data,
+				));
+				
+				$template->assign_vars(array(
+					'U_ADVANCED_EDIT' 	=> append_sid("{$phpbb_root_path}posting.$phpEx", 'mode=edit&amp;f=' . $forum_id . "&amp;t={$row['topic_id']}&amp;p={$row['post_id']}"),
+					'S_HIDDEN_FIELDS' 	=> $s_hidden_fields,
+				));
+				
 				// Build custom bbcodes array
 				display_custom_bbcodes();
 				
@@ -396,7 +437,7 @@ class phpbb_jquery_base
 					// Do not change to SELECT *
 					$sql = 'SELECT attach_id, is_orphan, attach_comment, real_filename
 						FROM ' . ATTACHMENTS_TABLE . '
-						WHERE post_msg_id = ' . (int)$post_id . '
+						WHERE post_msg_id = ' . (int) $this->post_id . '
 							AND in_message = 0
 							AND is_orphan = 0
 						ORDER BY filetime DESC';
@@ -524,7 +565,7 @@ class phpbb_jquery_base
 					// Do not change to SELECT *
 					$sql = 'SELECT attach_id, is_orphan, attach_comment, real_filename
 						FROM ' . ATTACHMENTS_TABLE . '
-						WHERE post_msg_id = ' . (int)$post_id . '
+						WHERE post_msg_id = ' . (int) $this->post_id . '
 							AND in_message = 0
 							AND is_orphan = 0
 						ORDER BY filetime DESC';
@@ -540,7 +581,7 @@ class phpbb_jquery_base
 				
 				
 				// Don't execute all that if we already have errors
-				if(!empty($message_parser->warn_msg))
+				if(!sizeof($this->error))
 				{
 					/**
 					* Start parsing the message for displaying the post
@@ -633,12 +674,21 @@ class phpbb_jquery_base
 						'TEXT'		=> $text,
 					));
 					$this->load_tpl = false;
+					
+					$this->add_return(array(
+						'SUCCESS_MESSAGE' => $user->lang['PJB_QUICKEDIT_SUCCESS_MSG'],
+						'SUCCESS_TITLE' => $user->lang['PJB_QUICKEDIT_SUCCESS'],
+					));
 					/* 
 					* Don't run submit_post before we checked for errors
 					* $mode is always edit as we just edit a post with this MOD
 					* $username is set to $user->data['username'] as we don't need the clean username for the logs
 					*/
 					submit_post('edit', $post_data['post_subject'], $post_data['username'], $post_data['topic_type'], $poll, $data);
+				}
+				else
+				{
+					$this->load_tpl = false;
 				}
 				
 			break;
@@ -652,7 +702,7 @@ class phpbb_jquery_base
 				*/
 				$sql = 'SELECT p.*, f.*, t.*
 						FROM ' . POSTS_TABLE . ' p, ' . TOPICS_TABLE . ' t, ' . FORUMS_TABLE . ' f
-						WHERE p.post_id = ' . (int)$post_id . ' AND p.topic_id = t.topic_id';	
+						WHERE p.post_id = ' . (int) $this->post_id . ' AND p.topic_id = t.topic_id';	
 				$result = $db->sql_query($sql);
 				$row = $db->sql_fetchrow($result);
 				$db->sql_freeresult($result);
@@ -744,8 +794,10 @@ class phpbb_jquery_base
 				}
 				
 				// Why should we waste any time if we already have an error?
-				if(!empty($this->error))
+				if(!sizeof($this->error))
 				{
+					global $phpbb_root_path, $phpEx;
+					
 					$s_hidden_fields = '<input type="hidden" name="lastclick" value="' . time() . '" />';
 					$s_hidden_fields .= build_hidden_fields(array(
 						'edit_post_message_checksum'	=> $row['post_checksum'],
@@ -775,7 +827,9 @@ class phpbb_jquery_base
 					'S_BBCODE_ALLOWED'		=> $bbcode_status,
 					'MAX_FONT_SIZE'			=> (int) $config['max_post_font_size'],
 				));
-				$this->tpl_load = true;
+				
+				$this->tpl_file = 'jquery_base/quickedit.html';
+				$this->load_tpl = true;
 			
 			break;
 			
@@ -1146,11 +1200,6 @@ class phpbb_jquery_base
 			// The last parameter tells submit_post if search indexer has to be run
 			$redirect_url = submit_post('reply', $post_data['post_subject'], $post_data['username'], $post_data['topic_type'], $poll, $data, $update_message, ($update_message) ? true : false);
 			
-			$this->add_return(array(
-				'SUCCESS_MESSAGE' => $user->lang['PJB_QUICKREPLY_SUCCESS_MSG'],
-				'SUCCESS_TITLE' => $user->lang['PJB_QUICKREPLY_SUCCESS'],
-			));
-			
 			// Now get the post id of the new post
 			$post_id = $data['post_id'];
 			
@@ -1364,6 +1413,12 @@ class phpbb_jquery_base
 			// Parse the post
 			$message = generate_text_for_display($data['message'], $data['bbcode_uid'], $data['bbcode_bitfield'], $bbcode_options);
 			
+			// And the success message
+			$success_msg = json_encode(array(
+				'SUCCESS_MESSAGE' => $user->lang['PJB_QUICKREPLY_SUCCESS_MSG'],
+				'SUCCESS_TITLE' => $user->lang['PJB_QUICKREPLY_SUCCESS'],
+			));
+			
 			$postrow = array(
 				'POST_AUTHOR_FULL'		=> ($poster_id != ANONYMOUS) ? $user_cache[$poster_id]['author_full'] : get_username_string('full', $poster_id, $row['username'], $row['user_colour'], $row['post_username']),
 				'POST_AUTHOR_COLOUR'	=> ($poster_id != ANONYMOUS) ? $user_cache[$poster_id]['author_colour'] : get_username_string('colour', $poster_id, $row['username'], $row['user_colour'], $row['post_username']),
@@ -1436,6 +1491,7 @@ class phpbb_jquery_base
 
 				'S_IGNORE_POST'		=> ($row['hide_post']) ? true : false,
 				'L_IGNORE_POST'		=> ($row['hide_post']) ? sprintf($user->lang['POST_BY_FOE'], get_username_string('full', $poster_id, $row['username'], $row['user_colour'], $row['post_username']), '<a href="' . $viewtopic_url . "&amp;p=$post_id&amp;view=show#p$post_id" . '">', '</a>') : '',
+				'SUCCESS_MSG'		=> $success_msg,
 			);
 
 			// Dump vars into template

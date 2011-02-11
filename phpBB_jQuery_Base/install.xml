@@ -70,7 +70,7 @@
 		<open src="language/en/common.php">
 			<edit>
 				<find><![CDATA[	'YOU_NO_NEW_PM'		=> 'No new private messages are waiting for you.',]]></find>
-				<action type="after-add"><![CDATA[	// jQuery Quick Edit -- START
+				<action type="after-add"><![CDATA[	// phpBB jQuery Base -- START
 	'QUICKEDIT_POST'					=> 'Quickedit post',
 	'ADVANCED_EDIT'						=> 'Advanced Edit',
 	'PJB_MARKREAD_FORUMS_SUCCESS_MSG'	=> 'You have successfully marked your forums read.',
@@ -79,7 +79,9 @@
 	'PJB_MARKREAD_TOPICS_SUCCESS'		=> '"Mark topics read" successful',
 	'PJB_QUICKREPLY_SUCCESS_MSG'		=> 'Your Quickreply to this topic was successful.',
 	'PJB_QUICKREPLY_SUCCESS'			=> 'Quickreply successful',
-	// jQuery Quick Edit -- END]]></action>
+	'PJB_QUICKEDIT_SUCCESS_MSG'			=> 'Your Quickedit to this post was successful.',
+	'PJB_QUICKEDIT_SUCCESS'				=> 'Quickedit successful',
+	// phpBB jQuery Base -- END]]></action>
 			</edit>
 		</open>
 		<open src="viewtopic.php">

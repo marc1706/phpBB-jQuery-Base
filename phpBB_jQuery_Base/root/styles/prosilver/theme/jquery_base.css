@@ -1,54 +1,5 @@
 /* phpBB jQuery Base CSS file */
 
-/** 
-* parts based on http://yensdesign.com/2008/09/how-to-create-a-stunning-and-smooth-popup-using-jquery/ 
-* modified by Marc Alexander, 2010
-*/
-
-#quickeditBackground {  
-	display:none;  
-	position:fixed;   
-	height:100%;  
-	width:100%;  
-	top:0;  
-	left:0;  
-	background:#000000;  
-	border:1px solid #cecece;  
-}  
-
-#popupQuickedit{  
-	display:none;  
-	position:fixed;  
-	height:384px;  
-	width:65%;  
-	background:#FFFFFF;  
-	border:2px solid #cecece;  
-	z-index:2;  
-	padding:12px;  
-	font-size:13px;  
-}  
-
-#quickeditClose {  
-	font-size:14px;  
-	line-height:14px;  
-	right:6px;  
-	top:4px;  
-	position:absolute;  
-	color:#6fa5fd;  
-	font-weight:700;  
-	display:block;  
-}
-
-#popupHeader {
-	border-bottom:1px dotted #D3D3D3;
-	color:#6FA5FD;
-	font-size:22px;
-	font-weight:700;
-	margin-bottom:20px;
-	padding-bottom:2px;
-	text-align:left;
-}
-
 #jqe-message-box {
 	width: auto;
 	margin-right: 6px;
@@ -58,44 +9,8 @@
 	width: 100%;
 }
 
-#jqe-edit-reason {
-	float: right;
-	display: inline;
-}
-
-#quickeditError {
-	display:none;  
-	position:fixed;  
-	height: 10%;  
-	width: 250px;
-	background:#FFFFFF;  
-	border:2px solid #cecece;  
-	z-index:2;  
-	padding:12px;  
-	font-size:13px;
-	text-align: center;
-	vertical-align: middle;
-}
-
-#quickeditErrorBG {  
-	display:none;  
-	position:fixed;  
-	height:100%;  
-	width:100%;  
-	top:0;  
-	left:0;  
-	background:#000000;  
-	border:1px solid #cecece;  
-}
-
 #quickedit-buttons {
 	margin: 15px 0 2px;
-}
-
-#quickeditAction {
-	display: none;
-	top: -5000px; 
-	left: -5000px;
 }
 
 #jqe-adv-form {
@@ -106,25 +21,13 @@
 	display: inline;
 }
 
-/*
-* Fixes for IE6 can be found below
-* It won't get beautiful in IE6, but it will work without bugs
-*/
-* html #quickeditBackground {
-	position: absolute;
+#pjB-qe-form {
+	display: none;
+	font-size: 1.2em;
 }
 
-* html #popupQuickedit {
-	position: absolute;
-	z-index: 0;
-}
-
-* html #quickeditError {
-	position: absolute;
-}
-
-* html #quickeditErrorBG {
-	position: absolute;
+.success-msg {
+	display: none;
 }
 
 /*
