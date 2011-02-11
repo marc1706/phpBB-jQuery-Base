@@ -75,6 +75,8 @@
 	'ADVANCED_EDIT'						=> 'Advanced Edit',
 	'PJB_MARKREAD_FORUMS_SUCCESS_MSG'	=> 'You have successfully marked your forums read.',
 	'PJB_MARKREAD_FORUMS_SUCCESS'		=> '"Mark forums read" successful',
+	'PJB_MARKREAD_TOPICS_SUCCESS_MSG'	=> 'You have successfully marked your topics in forum "%1$s" read.',
+	'PJB_MARKREAD_TOPICS_SUCCESS'		=> '"Mark topics read" successful',
 	'PJB_QUICKREPLY_SUCCESS_MSG'		=> 'Your Quickreply to this topic was successful.',
 	'PJB_QUICKREPLY_SUCCESS'			=> 'Quickreply successful',
 	// jQuery Quick Edit -- END]]></action>
@@ -134,6 +136,10 @@
 			<edit>
 				<find><![CDATA[					<!-- IF postrow.U_EDIT --><li class="edit-icon"><a href="{postrow.U_EDIT}" title="{L_EDIT_POST}"><span>{L_EDIT_POST}</span></a></li><!-- ENDIF -->]]></find>
 				<action type="before-add"><![CDATA[					<!-- IF postrow.U_EDIT --><li class="qe-icon"><a href="#" onclick="return false;" id="quickedit{postrow.POST_ID}" title="{L_QUICKEDIT_POST}"><span>{L_QUICKEDIT_POST}</span></a></li><!-- ENDIF -->]]></action>
+			</edit>
+			<edit>
+				<find><![CDATA[<!-- END postrow -->]]></find>
+				<action type="after-add"><![CDATA[<div id="pjb-quickreply"></div>]]></action>
 			</edit>
 		</open>
 		<open src="styles/prosilver/theme/buttons.css">

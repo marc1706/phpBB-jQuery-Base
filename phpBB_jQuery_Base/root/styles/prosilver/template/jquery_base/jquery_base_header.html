@@ -353,7 +353,7 @@ function mark_read(success)
 		pjB_output_info(success['SUCCESS_TITLE'], success['SUCCESS_MESSAGE'], true);
 		setTimeout (
 			'location.reload()', 
-			3000 // 2 seconds until page reload
+			3000 // 3 seconds until page reload
 		);
 	}
 	else
@@ -365,26 +365,37 @@ function mark_read(success)
 /**
 * function quickreply
 * show the new post or an error message
-* @todo: use jQuery UI notify widget for error message
 */
 function quickreply(success)
 {
-	if(success['ERROR'])
+	var is_error = false;
+	
+	try
 	{
-		for(i = 0; i < success['ERROR_COUNT']; i++)
+	  var return_ary = JSON.parse(success);
+	  is_error = true;
+	}
+	catch(e)
+	{
+	  is_error = false;
+	}
+
+	
+	if(is_error)
+	{
+		for(i = 0; i < return_ary['ERROR_COUNT']; i++)
 		{
-			pjB_output_info('', success['ERROR'][i], false);
+			pjB_output_info('', return_ary['ERROR'][i], true);
 		}
 	}
 	else
 	{
-		//pjB_output_info(success['SUCCESS_TITLE'], success['SUCCESS_MESSAGE'], true);
-		$('#pjb-quickreply').html($('#pjb-quickreply').html() + success);
+		$('#pjb-quickreply').append(success);
 		
 		var cur_id = '';
 		/*
 		* using this we can get the last id of our quickreply
-		* this should be done using the :last select, unfortunately this doesn't work
+		* this should be done using the :last select, unfortunately that doesn't work
 		*/
 		$('#pjb-quickreply').children().each( function () {
 			cur_id = $(this).attr('id');
@@ -438,7 +449,7 @@ function qe_do_ajax(mode, data, use_json)
 	$.ajax({
 		type: 'POST',
 		data: data,
-		dataType: 'auto',
+		dataType: datatype,
 		url: '{U_JQUERY_BASE}',
 		success: function(data){
 			switch(mode)
