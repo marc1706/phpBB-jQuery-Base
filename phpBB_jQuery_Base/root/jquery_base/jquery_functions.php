@@ -864,7 +864,7 @@ class phpbb_jquery_base
 		$reply_data['subject'] = utf8_normalize_nfc(request_var('subject', '', true));
 		
 		// set basic data
-		if (!$reply_data['topic_id'])
+		if (!$reply_data['topic_id'] || empty($reply_data['topic_id']))
 		{
 			$this->error[] = array('error' => 'NO_TOPIC', 'action' => 'cancel');
 		}
