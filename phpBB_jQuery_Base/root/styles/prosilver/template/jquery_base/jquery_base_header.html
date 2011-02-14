@@ -463,7 +463,7 @@ function qe_initInsertions()
 
 	if (is_ie && typeof(baseHeight) != 'number')
 	{
-		textarea.focus();
+		//textarea.focus(); // fix stack overflow error in IE
 		baseHeight = document.selection.createRange().duplicate().boundingHeight;
 	}
 }
