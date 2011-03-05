@@ -22,6 +22,9 @@ var cur_post_id = 0;
 
 var logged_in = '{S_USER_LOGGED_IN}';
 
+// Make sure we don't get issues with other MODs or libraries
+var pjb = jQuery.noConflict();
+
 /**
 * init functions
 */
@@ -30,10 +33,10 @@ var logged_in = '{S_USER_LOGGED_IN}';
 * functions that need to be executed after the page has finished loading
 */
 
-$(document).ready(function(){
+pjb(document).ready(function(){
 	// quickedit
-	$('.qe-icon a').click(function() {
-		post_id = $(this).attr('id');
+	pjb('.qe-icon a').click(function() {
+		post_id = pjb(this).attr('id');
 		post_id = post_id.replace(/quickedit/g, ''); // filter out the post ID
 		
 		// check if quick edit is already enabled
@@ -41,7 +44,7 @@ $(document).ready(function(){
 		{
 			//qe_centerPopup(); 
 			//qe_loadPopup();
-			cur_location = $(location).attr('href');
+			cur_location = pjb(location).attr('href');
 			data = 'mode=quickedit&qe_mode=init&post_id=' + post_id + '&location=' + location;
 			qe_do_ajax('open', data, false);
 			popup_open = true;
@@ -50,10 +53,10 @@ $(document).ready(function(){
 	});
 	
 	// mark forums read
-	$('li.rightside a.markread').click(function() {
+	pjb('li.rightside a.markread').click(function() {
 		if(popup_open != true)
 		{
-			cur_location = $(location).attr('href');
+			cur_location = pjb(location).attr('href');
 			data = 'mode=markread_forums&location=' + location;
 			qe_do_ajax('mark_read', data, true);
 			return false;
@@ -61,10 +64,10 @@ $(document).ready(function(){
 	});
 	
 	// mark topics read
-	$('div.pagination a.markread').click(function() {
+	pjb('div.pagination a.markread').click(function() {
 		if(popup_open != true)
 		{
-			cur_location = $(location).attr('href');
+			cur_location = pjb(location).attr('href');
 			data = 'mode=markread_topics&location=' + location;
 			qe_do_ajax('mark_read', data, true);
 			return false;
@@ -72,19 +75,19 @@ $(document).ready(function(){
 	});
 	
 	// Quickreply
-	$('#qr_editor_div .button1').click(function(event) {
+	pjb('#qr_editor_div .button1').click(function(event) {
 		if(popup_open != true)
 		{
 			event.preventDefault();
 			var data = 'mode=quickreply';
 			
 			// get some more info, i.e. subject
-			data += '&subject=' + $('#qr_editor_div input#subject').val();
-			data += '&' + $('#qr_editor_div textarea.inputbox').serialize();
+			data += '&subject=' + pjb('#qr_editor_div input#subject').val();
+			data += '&' + pjb('#qr_editor_div textarea.inputbox').serialize();
 
 			var i = 1;
-			$('#qr_editor_div input:hidden').each(function() {
-				data += '&reply_data' + i + '=' + $(this).attr('name') + '&reply_data_val' + i + '=' + $(this).val();
+			pjb('#qr_editor_div input:hidden').each(function() {
+				data += '&reply_data' + i + '=' + pjb(this).attr('name') + '&reply_data_val' + i + '=' + pjb(this).val();
 				i++;
 			});
 			qe_do_ajax('quickreply', data, false);
@@ -92,7 +95,7 @@ $(document).ready(function(){
 	});
 	
 	// initialise jQuery UI notify widget
-	$("#container").notify();
+	pjb("#container").notify();
 	
 	// show "new" PM popup
 	<!-- IF S_USER_PM_POPUP -->
@@ -116,8 +119,8 @@ $(document).ready(function(){
 function bind_quickedit_buttons()
 {
 	// somebody clicks on the bbcode buttons
-	$('#quickedit-buttons input').bind('click', function() {
-		cur_bbcode = $(this).attr('id');
+	pjb('#quickedit-buttons input').bind('click', function() {
+		cur_bbcode = pjb(this).attr('id');
 		cur_bbcode = cur_bbcode.replace(/bbcode/g, ''); // filter out unneeded parts
 		
 		// make sure we don't get javascript errors
@@ -128,44 +131,43 @@ function bind_quickedit_buttons()
 	});
 	
 	// somebody uses the size dropdown box
-	$('select#addbbcode202').bind('change', function() {
-		var cur_size = $('select#addbbcode202 option:selected').val();
+	pjb('select#addbbcode202').bind('change', function() {
+		var cur_size = pjb('select#addbbcode202 option:selected').val();
 		qe_bbfontstyle('[size=' + cur_size + ']', '[/size]');
-		$('select#addbbcode202 option')[2].attr('selected', 'selected');
+		pjb('select#addbbcode202 option')[2].attr('selected', 'selected');
 	});
 	
 	// click on "submit"
-	$('#submit_jqe').bind('click', function() {
+	pjb('#submit_jqe').bind('click', function() {
 		if(quickedit_open == true)
 		{
-			content = $('textarea#jqe-message').serialize();
+			content = pjb('textarea#jqe-message').serialize();
 			content = content.substring(8); // make sure we get rid of the 'message=' in front of the post text
-			cur_location = $(location).attr('href');
+			cur_location = pjb(location).attr('href');
 			data = 'mode=quickedit&qe_mode=submit&post_id=' + post_id + '&contents=' + content + '&location=' + location;
 			qe_do_ajax('submit', data, true);
 		}
 	});
 	
 	// click on "cancel"
-	$('#cancel_jqe').bind('click', function() {
+	pjb('#cancel_jqe').bind('click', function() {
 		if(quickedit_open == true)
 		{
-			$('textarea#jqe-message').val(''); // make sure the user can't see what was in the textbox after clicking cancel
+			pjb('textarea#jqe-message').val(''); // make sure the user can't see what was in the textbox after clicking cancel
 			cancel_edit(); // we don't need an ajax request since we just need to close the edit window
 			quickedit_open = false;
 		}
 	});
 	
 	// click on "advanced edit"
-	$('#adv_jqe').bind('mouseover', function() {
+	pjb('#adv_jqe').bind('mouseover', function() {
 		if(quickedit_open == true)
 		{
 			// get current url for forum_id if we have a global announcement
-			cur_location = $(location).attr('href');
-			content = $('textarea#jqe-message').val();
+			cur_location = pjb(location).attr('href');
+			content = pjb('textarea#jqe-message').val();
 			data = 'mode=quickedit&qe_mode=advanced_edit&post_id=' + post_id + '&contents=' + content + '&location=' + location;
-			$('input[name="message"]:hidden').val(content);
-			//qe_do_ajax('advanced_edit', data, true);
+			pjb('input[name="message"]:hidden').val(content);
 		}
 	});
 }
@@ -194,11 +196,11 @@ function open_edit(success)
 	}
 	else
 	{
-		$('#post' + cur_post_id + ' div.content').hide();
-		$('#post' + cur_post_id + ' div.notice').hide();
-		$('#post' + cur_post_id + ' dl.attachbox').hide();
-		$('#post' + cur_post_id).append(success);
-		$('#pjB-qe-form').show('slow');
+		pjb('#post' + cur_post_id + ' div.content').hide();
+		pjb('#post' + cur_post_id + ' div.notice').hide();
+		pjb('#post' + cur_post_id + ' dl.attachbox').hide();
+		pjb('#post' + cur_post_id).append(success);
+		pjb('#pjB-qe-form').show('slow');
 		bind_quickedit_buttons();
 		quickedit_open = true;
 	}
@@ -221,13 +223,13 @@ function submit_edit(data)
 	}
 	else
 	{
-		$('#post' + cur_post_id + ' div.content').html(data['TEXT']);
-		$('#post' + cur_post_id + ' div.notice').html(data['EDITED_BY']);
-		$('#pjB-qe-form').hide('slow');
-		$('#pjB-qe-form').remove();
-		$('#post' + cur_post_id + ' div.content').show('slow');
-		$('#post' + cur_post_id + ' dl.attachbox').show('slow');
-		$('#post' + cur_post_id + ' div.notice').show('slow');
+		pjb('#post' + cur_post_id + ' div.content').html(data['TEXT']);
+		pjb('#post' + cur_post_id + ' div.notice').html(data['EDITED_BY']);
+		pjb('#pjB-qe-form').hide('slow');
+		pjb('#pjB-qe-form').remove();
+		pjb('#post' + cur_post_id + ' div.content').show('slow');
+		pjb('#post' + cur_post_id + ' dl.attachbox').show('slow');
+		pjb('#post' + cur_post_id + ' div.notice').show('slow');
 		pjB_output_info(data['SUCCESS_TITLE'], data['SUCCESS_MESSAGE'], true);
 		
 		quickedit_open = false;
@@ -238,46 +240,13 @@ function submit_edit(data)
 // cancel quickedit
 function cancel_edit()
 {
-	$('#pjB-qe-form').hide('slow');
-	$('#pjB-qe-form').remove();
-	$('#post' + cur_post_id + ' div.content').show('slow');
-	$('#post' + cur_post_id + ' dl.attachbox').show('slow');
-	$('#post' + cur_post_id + ' div.notice').show('slow');
+	pjb('#pjB-qe-form').hide('slow');
+	pjb('#pjB-qe-form').remove();
+	pjb('#post' + cur_post_id + ' div.content').show('slow');
+	pjb('#post' + cur_post_id + ' dl.attachbox').show('slow');
+	pjb('#post' + cur_post_id + ' div.notice').show('slow');
 	quickedit_open = false;
 	popup_open = false;
-}
-
-// open advanced edit
-function advanced_edit(success)
-{
-	//$('#popupQuickedit').html(success);
-	alert(success);
-	var is_error = false;
-	
-	try
-	{
-		var return_ary = JSON.parse(success);
-		is_error = true;
-	}
-	catch(e)
-	{
-		is_error = false;
-	}
-	
-	if(is_error)
-	{
-		for(i = 0; i < return_ary['ERROR_COUNT']; i++)
-		{
-			pjB_output_info('', return_ary['ERROR'][i], true);
-		}
-	}
-	else
-	{
-		$('#pjB-qe-form').remove();
-		$('#post' + cur_post_id).append(success);
-		$('#pjB-adv-form').submit();
-		quickedit_open = true;
-	}
 }
 
 // mark_read
@@ -325,23 +294,23 @@ function quickreply(success)
 	}
 	else
 	{
-		$('#pjb-quickreply').append(success);
+		pjb('#pjb-quickreply').append(success);
 		
 		var cur_id = '';
 		/*
 		* using this we can get the last id of our quickreply
 		* this should be done using the :last select, unfortunately that doesn't work
 		*/
-		$('#pjb-quickreply').children().each( function () {
-			cur_id = $(this).attr('id');
+		pjb('#pjb-quickreply').children().each( function () {
+			cur_id = pjb(this).attr('id');
 		});
 
-		$('#qr_editor_div textarea.inputbox').val('');
-		$('#' + cur_id).fadeIn('slow');
+		pjb('#qr_editor_div textarea.inputbox').val('');
+		pjb('#' + cur_id).fadeIn('slow');
 		
 		try
 		{
-			var success_msg = JSON.parse($('#' + cur_id + ' .success-msg').html());
+			var success_msg = JSON.parse(pjb('#' + cur_id + ' .success-msg').html());
 			pjB_output_info(success_msg['SUCCESS_TITLE'], success_msg['SUCCESS_MESSAGE'], true)
 		}
 		catch(e)
@@ -363,14 +332,14 @@ function pjB_output_info(title, message, expire)
 {
 	if(expire)
 	{
-		$("#container").notify("create", {
+		pjb("#container").notify("create", {
 			title: title,
 			text: message
 		});
 	}
 	else
 	{
-		$("#container").notify("create", {
+		pjb("#container").notify("create", {
 			title: title,
 			text: message
 		},{
@@ -391,7 +360,7 @@ function qe_do_ajax(mode, data, use_json)
 		var datatype = 'html';
 	}
 
-	$.ajax({
+	pjb.ajax({
 		type: 'POST',
 		data: data,
 		dataType: datatype,
@@ -400,7 +369,7 @@ function qe_do_ajax(mode, data, use_json)
 			switch(mode)
 			{
 				case 'open':
-					$('#quickeditError').html('');
+					pjb('#quickeditError').html('');
 					open_edit(data);
 				break;
 				case 'submit':
@@ -459,7 +428,7 @@ var qe_txt_name2 = '#jqe-message';
 function qe_initInsertions() 
 {
 	//var textarea = document.getElementById(qe_txt_name);
-	var textarea = $(qe_txt_name2);
+	var textarea = pjb(qe_txt_name2);
 
 	if (is_ie && typeof(baseHeight) != 'number')
 	{
