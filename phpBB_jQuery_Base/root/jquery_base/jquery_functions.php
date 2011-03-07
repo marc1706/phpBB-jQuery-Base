@@ -21,15 +21,15 @@ class phpbb_jquery_base
 	/*
 	* initial vars
 	*/
-	var $error = array(); // save errors in here (i.e. when quickediting posts)
-	var $mode;
-	var $post_id;
-	var $location;
-	var $forum_id;
-	var $submit = false;
-	var $load_tpl = false;
-	var $return = array();
-	var $tpl_file;
+	public $error = array(); // save errors in here (i.e. when quickediting posts)
+	public $mode;
+	public $post_id;
+	public $location;
+	public $forum_id;
+	public $submit = false;
+	public $load_tpl = false;
+	public $return = array();
+	public $tpl_file;
 	
 	/* 
 	* function definitions below
@@ -38,7 +38,7 @@ class phpbb_jquery_base
 	/*
 	* initialise variables for following actions
 	*/
-	function init()
+	public function __construct()
 	{
 		global $user, $phpbb_root_path, $phpEx;
 		
@@ -86,7 +86,7 @@ class phpbb_jquery_base
 	*
 	* @param: none
 	*/
-	function run_actions()
+	public function run_actions()
 	{
 		// don't do anything if we already have an error because it can only be a "NO_MODE" error
 		if(empty($error))
@@ -113,7 +113,7 @@ class phpbb_jquery_base
 	* Decide what functions we need to run after run_actions()
 	* @param: none
 	*/
-	function page_footer()
+	public function page_footer()
 	{
 		global $template;
 
@@ -155,7 +155,7 @@ class phpbb_jquery_base
 	* @param <string> $check The function or class that shouldn't exist if the file hasn't been included yet
 	* @param <bool> $class Set to true if you would like to check for a class and false if you would like to check for a function
 	*/
-	function include_file($file, $check, $class = false)
+	private function include_file($file, $check, $class = false)
 	{
 		global $phpbb_root_path, $phpEx;
 		
@@ -182,7 +182,7 @@ class phpbb_jquery_base
 	* @param: <array> $return_ary The array of variables -- the array needs to be structured like: array('varname' => 'value')
 	* @param: <bool> $force Set to true if you want to overwrite already existing values
 	*/
-	function add_return($return_ary, $force = false)
+	private function add_return($return_ary, $force = false)
 	{
 		foreach($return_ary as $key => $value)
 		{
@@ -198,7 +198,7 @@ class phpbb_jquery_base
 	* Quickedit posts
 	* @param none
 	*/
-	function quickedit()
+	private function quickedit()
 	{
 		global $db, $config, $auth, $template, $user;
 
@@ -843,7 +843,7 @@ class phpbb_jquery_base
 	* posting and viewtopic code from phpBB 3.0.8:
 	* @copyright (c) 2005 phpBB Group
 	*/
-	function quickreply()
+	private function quickreply()
 	{
 		global $db, $config, $auth, $template, $user;
 		
@@ -1576,7 +1576,7 @@ class phpbb_jquery_base
 	*
 	* @param <string> $type The kind of "mark" this function should run (i.e. mark all forums read)
 	*/
-	function mark_read($type)
+	private function mark_read($type)
 	{
 		global $db, $template, $auth, $user, $config, $phpbb_root_path, $phpEx;
 		

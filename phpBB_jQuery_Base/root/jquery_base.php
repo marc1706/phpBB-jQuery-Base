@@ -25,9 +25,6 @@ $user->setup('posting');
 // create new instance of jQuery Base class
 $jquery_base = new phpbb_jquery_base();
 
-// init jQuery Base
-$jquery_base->init();
-
 // run PHP code for jQuery
 $jquery_base->run_actions();
 
