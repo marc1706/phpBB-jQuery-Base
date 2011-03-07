@@ -21,15 +21,15 @@ class phpbb_jquery_base
 	/*
 	* initial vars
 	*/
-	public $error = array(); // save errors in here (i.e. when quickediting posts)
-	public $mode;
-	public $post_id;
-	public $location;
-	public $forum_id;
-	public $submit = false;
-	public $load_tpl = false;
-	public $return = array();
-	public $tpl_file;
+	private $error = array(); // save errors in here (i.e. when quickediting posts)
+	private $mode;
+	private $post_id;
+	private $location;
+	private $forum_id;
+	private $submit = false;
+	private $load_tpl = false;
+	private $return = array();
+	private $tpl_file;
 	
 	/* 
 	* function definitions below
