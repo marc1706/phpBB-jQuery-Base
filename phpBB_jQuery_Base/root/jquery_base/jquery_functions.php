@@ -1053,10 +1053,6 @@ class phpbb_jquery_base
 			}
 		}
 		
-		// Parse Attachments - before checksum is calculated
-		// @todo: check if we need this -- needs to be tested
-		$message_parser->parse_attachments('fileupload', 'reply', $reply_data['forum_id'], true, false, false);
-		
 		// Grab md5 'checksum' of new message
 		$message_md5 = md5($message_parser->message);
 		
