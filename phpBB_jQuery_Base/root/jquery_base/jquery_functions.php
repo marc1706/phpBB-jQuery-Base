@@ -56,7 +56,7 @@ class phpbb_jquery_base
 		
 		/* 
 		* if somebody previews a style using the style URL parameter, we need to do this
-		* @todo: find out if this is enough
+		* this will not work for other cases
 		*/
 		if($this->forum_id < 1)
 		{
@@ -104,6 +104,8 @@ class phpbb_jquery_base
 				break;
 				case 'markread_topics':
 					$this->mark_read('topics');
+				case 'login':
+					$this->login();
 			}
 		}
 	}
@@ -258,7 +260,7 @@ class phpbb_jquery_base
 					// topic locked
 					$this->error[] = array('error' => $user->lang['TOPIC_LOCKED'], 'action' => 'cancel');
 				}
-				// @todo: start working from here
+
 				// check if the user is allowed to edit the selected post
 				if (!$auth->acl_get('m_edit', $forum_id))
 				{
@@ -1734,6 +1736,29 @@ class phpbb_jquery_base
 
 			$this->add_return(array(
 				'MARK_REDIRECT'	=> reapply_sid($redirect_url),
+			));
+		}
+	}
+	
+	/*
+	* Open login box
+	*
+	* if user is already logged in, still tell him that he successfully logged in
+	*/
+	private function login()
+	{
+		global $user;
+		
+		if ($user->data['user_id'] == ANONYMOUS)
+		{
+			login_box();
+		}
+		else
+		{
+			$user->add_lang('ucp');
+
+			$this->add_return(array(
+				'SUCCESS'	=> $user->lang['LOGIN_REDIRECT'],
 			));
 		}
 	}
