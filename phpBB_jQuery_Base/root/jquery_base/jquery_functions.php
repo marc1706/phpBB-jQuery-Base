@@ -30,6 +30,7 @@ class phpbb_jquery_base
 	private $load_tpl = false;
 	private $return = array();
 	private $tpl_file;
+	public $config = array();
 	
 	/* 
 	* function definitions below
@@ -46,6 +47,7 @@ class phpbb_jquery_base
 		$this->mode = request_var('mode', '');
 		$this->location = request_var('location', '');
 		$this->submit = request_var('submit', false);
+		$this->obtain_config();
 
 		// provide a valid location (need for some functions)
 		$this->location = utf8_normalize_nfc(request_var('location', '', true));
@@ -78,6 +80,27 @@ class phpbb_jquery_base
 			break;
 			default:
 				$this->error[] = array('error' => 'NO_MODE', 'action' => 'cancel');
+		}
+	}
+	
+	/*
+	* Get config data from $config
+	* We just use the cached array $config
+	*
+	* __construct() will run this function
+	*/
+	private function obtain_config()
+	{
+		global $config;
+		
+		foreach($config as $key => $value)
+		{
+			$jquery_config_name = 'pjb_'; // all config variables of phpBB jQuery Base start with this
+			$cur_pos = strpos($key, $jquery_config_name);
+			if($cur_pos !== false)
+			{
+				$this->config[$key] = $value;
+			}
 		}
 	}
 	
