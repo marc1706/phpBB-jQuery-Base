@@ -38,12 +38,10 @@ pjb(document).ready(function(){
 	pjb('.qe-icon a').click(function() {
 		post_id = pjb(this).attr('id');
 		post_id = post_id.replace(/quickedit/g, ''); // filter out the post ID
-		
+
 		// check if quick edit is already enabled
 		if(popup_open != true)
 		{
-			//qe_centerPopup(); 
-			//qe_loadPopup();
 			cur_location = pjb(location).attr('href');
 			data = 'mode=quickedit&qe_mode=init&post_id=' + post_id + '&location=' + location;
 			qe_do_ajax('open', data, false);
@@ -176,7 +174,7 @@ function bind_quickedit_buttons()
 function open_edit(success)
 {
 	var is_error = false;
-	
+
 	try
 	{
 	  var return_ary = JSON.parse(success);
@@ -196,6 +194,7 @@ function open_edit(success)
 	}
 	else
 	{
+		alert(cur_post_id);
 		pjb('#post' + cur_post_id + ' div.content').hide();
 		pjb('#post' + cur_post_id + ' div.notice').hide();
 		pjb('#post' + cur_post_id + ' dl.attachbox').hide();
@@ -304,6 +303,22 @@ function quickreply(success)
 		pjb('#pjb-quickreply').children().each( function () {
 			cur_id = pjb(this).attr('id');
 		});
+		
+		// we need to bind the click to the new quickedit button
+		pjb('.qe-icon a').bind('click', function() {
+			post_id = pjb(this).attr('id');
+			post_id = post_id.replace(/quickedit/g, ''); // filter out the post ID
+
+			// check if quick edit is already enabled
+			if(popup_open != true)
+			{
+				cur_location = pjb(location).attr('href');
+				data = 'mode=quickedit&qe_mode=init&post_id=' + post_id + '&location=' + location;
+				qe_do_ajax('open', data, false);
+				popup_open = true;
+				cur_post_id = post_id;
+			}
+		});
 
 		pjb('#qr_editor_div textarea.inputbox').val('');
 		pjb('#' + cur_id).fadeIn('slow');
@@ -348,7 +363,10 @@ function pjB_output_info(title, message, expire)
 	}
 }
 
-// general AJAX function
+/* 
+* general AJAX function
+* @todo: get a new name :D
+*/
 function qe_do_ajax(mode, data, use_json)
 {
 	if(use_json)
