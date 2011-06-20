@@ -1391,6 +1391,8 @@ class phpbb_jquery_base
 
 							if ($bday_year)
 							{
+								$now = getdate(time() + $user->timezone + $user->dst - date('Z'));
+
 								$diff = $now['mon'] - $bday_month;
 								if ($diff == 0)
 								{
@@ -1419,7 +1421,7 @@ class phpbb_jquery_base
 			$delete_allowed = ($user->data['is_registered'] && ($auth->acl_get('m_delete', $data['forum_id']) || (
 				$user->data['user_id'] == $poster_id &&
 				$auth->acl_get('f_delete', $data['forum_id']) &&
-				$topic_data['topic_last_post_id'] == $post_id &&
+				$post_data['topic_last_post_id'] == $post_id &&
 				($row['post_time'] > time() - ($config['delete_time'] * 60) || !$config['delete_time']) &&
 				// we do not want to allow removal of the last post if a moderator locked it!
 				!$row['post_edit_locked']
