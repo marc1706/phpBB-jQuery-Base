@@ -22,11 +22,10 @@ class acp_jquery_base_info
 	{
 		return array(
 			'filename'	=> 'acp_jquery_base',
-			'title'		=> 'ACP_STATS_INFO',
-			'version'	=> '1.0.3',
+			'title'		=> 'ACP_JQUERY_BASE_INFO',
+			'version'	=> '0.0.2',
 			'modes'		=> array(
-				'settings'			=> array('title' => 'ACP_STATS_GENERAL_INFO', 'auth' => 'acl_a_board', 'cat' => array('ACP_BOARD_CONFIGURATION')),
-				'addons'			=> array('title' => 'ACP_STATS_ADDONS', 'auth' => 'acl_a_board', 'cat' => array('ACP_BOARD_CONFIGURATION')),
+				'general'			=> array('title' => 'ACP_JQUERY_GENERAL_INFO', 'auth' => 'acl_a_board', 'cat' => array('ACP_BOARD_CONFIGURATION')),
 			),
 		);
 	}
