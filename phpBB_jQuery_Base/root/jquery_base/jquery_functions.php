@@ -41,7 +41,7 @@ class phpbb_jquery_base
 	*/
 	public function __construct()
 	{
-		global $user, $phpbb_root_path, $phpEx;
+		global $user, $phpbb_root_path, $phpEx, $auth;
 		
 		$this->post_id = request_var('post_id', 0);
 		$this->mode = request_var('mode', '');
@@ -69,10 +69,29 @@ class phpbb_jquery_base
 		switch($this->mode)
 		{
 			case 'quickreply':
-				$this->include_file('includes/functions_posting', 'submit_post');
+				if ($config['pjb_quickreply_enable'])
+				{
+					if($auth->acl_get('u_quickreply'))
+					{
+						$this->include_file('includes/functions_posting', 'submit_post');
+					}
+					else
+					{
+						$this->error[] = array('error' => 'NO_AUTH_OPERATION', 'action' => 'cancel');
+					}
+				}
 			case 'quickedit':
-				$this->include_file('includes/functions_display', 'display_forums');
-				$this->include_file('includes/message_parser', 'bbcode_firstpass', true);
+				if ($config['pjb_quickedit_enable'])
+				{
+					if($auth->acl_get('u_quickedit'))
+					{
+						$this->include_file('includes/functions_display', 'display_forums');
+						$this->include_file('includes/message_parser', 'bbcode_firstpass', true);
+					else
+					{
+						$this->error[] = array('error' => 'NO_AUTH_OPERATION', 'action' => 'cancel');
+					}
+				}
 			break;
 			case 'markread_forums':
 			case 'markread_topics':
