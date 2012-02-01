@@ -1,8 +1,8 @@
 <?php
 /**
 *
-* @package Board3 Portal v2
-* @copyright (c) Board3 Group ( www.board3.de )
+* @package phpBB jQuery Base
+* @copyright (c) 2011 Marc Alexander(marc1706) www.m-a-styles.de
 * @license http://opensource.org/licenses/gpl-license.php GNU Public License
 *
 */
