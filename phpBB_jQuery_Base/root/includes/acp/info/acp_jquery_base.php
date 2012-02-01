@@ -30,5 +30,3 @@ class acp_jquery_base_info
 		);
 	}
 }
-
-?>

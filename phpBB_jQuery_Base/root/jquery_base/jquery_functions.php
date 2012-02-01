@@ -1784,5 +1784,3 @@ class phpbb_jquery_base
 		}
 	}
 }
-
-?>

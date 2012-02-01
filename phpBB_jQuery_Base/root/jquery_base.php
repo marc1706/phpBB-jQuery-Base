@@ -30,5 +30,3 @@ $jquery_base->run_actions();
 
 // finish it!!!
 $jquery_base->page_footer();
-
-?>

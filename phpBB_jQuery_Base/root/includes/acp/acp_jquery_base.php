@@ -159,5 +159,3 @@ class acp_jquery_base
 	
 	
 }
-
-?>
