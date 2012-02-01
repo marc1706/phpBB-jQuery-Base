@@ -15,11 +15,11 @@
 				<email><![CDATA[admin@m-a-styles.de]]></email>
 			</author>
 		</author-group>
-		<mod-version>0.0.1</mod-version>
+		<mod-version>0.0.2</mod-version>
 		<installation>
 			<level>easy</level>
 			<time>300</time>
-			<target-version>3.0.8</target-version>
+			<target-version>3.0.10</target-version>
 		</installation>
 		<!--
 		<link-group>
@@ -58,39 +58,15 @@
 		<open src="includes/functions.php">
 			<edit>
 				<find><![CDATA['U_PRIVATEMSGS'			=> append_sid("{$phpbb_root_path}ucp.$phpEx", 'i=pm&amp;folder=inbox'),]]></find>
-				<action type="before-add"><![CDATA[		'U_JQUERY_BASE'				=> append_sid("{$phpbb_root_path}jquery_base.$phpEx"),]]></action>
+				<action type="before-add"><![CDATA[		'U_JQUERY_BASE'				=> append_sid("{$phpbb_root_path}jquery_base.$phpEx"),
+	'QUICKEDIT_IMG'		=> $user->img('icon_post_quickedit', 'QUICKEDIT_POST'),
+	'U_QUICKEDIT' 			=> append_sid("{$phpbb_root_path}quickedit.$phpEx"),]]></action>
 			</edit>	
 		</open>
 		<open src="language/en/acp/styles.php">
 			<edit>
 				<find><![CDATA[	'IMG_ICON_POST_EDIT'			=> 'Edit post',]]></find>
 				<action type="after-add"><![CDATA[	'IMG_ICON_POST_QUICKEDIT'		=> 'Quickedit post',]]></action>
-			</edit>
-		</open>
-		<open src="language/en/common.php">
-			<edit>
-				<find><![CDATA[	'YOU_NO_NEW_PM'		=> 'No new private messages are waiting for you.',]]></find>
-				<action type="after-add"><![CDATA[	// phpBB jQuery Base -- START
-	'QUICKEDIT_POST'					=> 'Quickedit post',
-	'ADVANCED_EDIT'						=> 'Advanced Edit',
-	'PJB_MARKREAD_FORUMS_SUCCESS_MSG'	=> 'You have successfully marked your forums read.',
-	'PJB_MARKREAD_FORUMS_SUCCESS'		=> '"Mark forums read" successful',
-	'PJB_MARKREAD_TOPICS_SUCCESS_MSG'	=> 'You have successfully marked your topics in forum "%1$s" read.',
-	'PJB_MARKREAD_TOPICS_SUCCESS'		=> '"Mark topics read" successful',
-	'PJB_QUICKREPLY_SUCCESS_MSG'		=> 'Your Quickreply to this topic was successful.',
-	'PJB_QUICKREPLY_SUCCESS'			=> 'Quickreply successful',
-	'PJB_QUICKEDIT_SUCCESS_MSG'			=> 'Your Quickedit to this post was successful.',
-	'PJB_QUICKEDIT_SUCCESS'				=> 'Quickedit successful',
-	// phpBB jQuery Base -- END]]></action>
-			</edit>
-		</open>
-		<open src="viewtopic.php">
-			<edit>
-				<find><![CDATA[	'WARN_IMG'			=> $user->img('icon_user_warn', 'WARN_USER'),]]></find>
-				<action type="after-add"><![CDATA[	// jQuery Quick Edit -- START
-	'QUICKEDIT_IMG'		=> $user->img('icon_post_quickedit', 'QUICKEDIT_POST'),
-	'U_QUICKEDIT' 			=> append_sid("{$phpbb_root_path}quickedit.$phpEx"),
-	// jQuery Quick Edit -- END]]></action>
 			</edit>
 		</open>
 		<open src="styles/prosilver/imageset/en/imageset.cfg">
@@ -107,8 +83,8 @@
 		</open>
 		<open src="styles/prosilver/template/viewforum_body.html">
 			<edit>
-				<find><![CDATA[	<li class="rightside"><a href="{U_MARK_FORUMS}">{L_MARK_FORUMS_READ}</a></li>]]></find>
-				<action type="replace-with"><![CDATA[	<li class="rightside"><a href="{U_MARK_FORUMS}" class="markread">{L_MARK_FORUMS_READ}</a></li>]]></action>
+				<find><![CDATA[	<li class="rightside"><a href="{U_MARK_FORUMS}">{L_MARK_SUBFORUMS_READ}</a></li>]]></find>
+				<action type="replace-with"><![CDATA[	<li class="rightside"><a href="{U_MARK_FORUMS}" class="markread">{L_MARK_SUBFORUMS_READ}</a></li>]]></action>
 			</edit>
 			<edit>
 				<find><![CDATA[			<!-- IF not S_IS_BOT and U_MARK_TOPICS --><a href="{U_MARK_TOPICS}" accesskey="m">{L_MARK_TOPICS_READ}</a> &bull; <!-- ENDIF --><!-- IF TOTAL_TOPICS -->{TOTAL_TOPICS}<!-- ENDIF -->]]></find>
@@ -117,12 +93,9 @@
 		</open>
 		<open src="styles/prosilver/template/overall_header.html">
 			<edit>
-				<remove><![CDATA[	<!-- IF S_USER_PM_POPUP -->
-		if ({S_NEW_PM})
-		{
-			var url = '{UA_POPUP_PM}';
-			window.open(url.replace(/&amp;/g, '&'), '_phpbbprivmsg', 'height=225,resizable=yes,scrollbars=yes, width=400');
-		}
+				<remove><![CDATA[	<!-- IF S_USER_PM_POPUP and S_NEW_PM -->
+		var url = '{UA_POPUP_PM}';
+		window.open(url.replace(/&amp;/g, '&'), '_phpbbprivmsg', 'height=225,resizable=yes,scrollbars=yes, width=400');
 	<!-- ENDIF -->]]></remove>
 			</edit>
 			<edit>
@@ -173,6 +146,7 @@
 				<action type="after-add"><![CDATA[.qe-icon, .qe-icon a			{ background-image: url("{IMG_ICON_POST_QUICKEDIT_SRC}"); }]]></action>
 			</edit>
 		</open>
+		<php-installer>install/index.php</php-installer>
 		<diy-instructions lang="en">After editing all the files please do the following:
 
 Go to ACP->Styles->Templates-> And click "Refresh" for all your templates.

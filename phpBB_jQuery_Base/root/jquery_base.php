@@ -21,6 +21,7 @@ include($phpbb_root_path . 'jquery_base/jquery_functions.' . $phpEx);
 $user->session_begin();
 $auth->acl($user->data);
 $user->setup('posting');
+$user->add_lang('mods/jquery_base');
 
 // create new instance of jQuery Base class
 $jquery_base = new phpbb_jquery_base();
