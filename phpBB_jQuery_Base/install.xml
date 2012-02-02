@@ -69,6 +69,13 @@
 				<action type="after-add"><![CDATA[	'IMG_ICON_POST_QUICKEDIT'		=> 'Quickedit post',]]></action>
 			</edit>
 		</open>
+		<open src="language/en/common.php">
+			<edit>
+				<find><![CDATA[  'YOU_NO_NEW_PM'    => 'No new private messages are waiting for you.',]]></find>
+				<action type="after-add"><![CDATA[	'acl_u_quickreply'	=> array('lang' => 'Can use the jQuery-based Quickreply', 'cat' => 'misc'),
+	'acl_u_quickedit'	=> array('lang' => 'Can use the jQuery-based Quickedit', 'cat' => 'misc'),]]></action>
+			</edit>
+		</open>
 		<open src="styles/prosilver/imageset/en/imageset.cfg">
 			<edit>
 				<find><![CDATA[img_icon_post_edit = icon_post_edit.gif*20*42]]></find>
