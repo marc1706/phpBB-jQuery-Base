@@ -19,6 +19,7 @@ var edited_by_div = '#post\%d div.notice';
 */
 var popup_open = false;
 var cur_post_id = 0;
+var login_instance;
 
 var logged_in = '{S_USER_LOGGED_IN}';
 
@@ -90,6 +91,33 @@ pjb(document).ready(function(){
 			});
 			qe_do_ajax('quickreply', data, false);
 		}
+	});
+	
+	// Quick Login
+	pjb('.icon-logout a').click(function(event) {
+		<!-- IF not S_USER_LOGGED_IN -->
+			event.preventDefault();
+			var data = 'mode=login';
+			
+			/** 
+			* create HTML for login box
+			* nobody said this would look nice ...
+			*/
+			message = '<div id="pjb-login"><span class="genmed">{L_USERNAME}:</span><br /><input type="text" tabindex="1" name="username" id="username" value="" class="inputbox autowidth" /><br /><br /><span class="genmed">{L_PASSWORD}:</span><br /><input type="password" tabindex="2" id="password" name="password" class="inputbox autowidth" />';
+			message += '<br /><br />';
+			message += '<input type="checkbox" class="radio" name="autologin" tabindex="3" /> <span class="gensmall">{L_LOG_ME_IN}</span><br />';
+			message += '<br /><a href="{U_REGISTER}">{L_REGISTER}</a><br />';
+			message += '<br /><input type="submit" name="login" tabindex="5" value="{L_LOGIN}" class="button1" /></div>';
+			
+			login_instance = pjb("#container").notify("create", {
+				title: "{L_LOGIN_LOGOUT}",
+				text: message
+			},{
+				expires: false
+			});
+			
+			bind_quickedit_buttons();
+		<!-- ENDIF -->
 	});
 	
 	// initialise jQuery UI notify widget
@@ -167,6 +195,20 @@ function bind_quickedit_buttons()
 			data = 'mode=quickedit&qe_mode=advanced_edit&post_id=' + post_id + '&contents=' + content + '&location=' + location;
 			pjb('input[name="message"]:hidden').val(content);
 		}
+	});
+	
+	// click on login
+	pjb('#pjb-login input.button1').bind('click', function() {
+		// get current url for forum_id if we have a global announcement
+		cur_location = pjb(location).attr('href');
+		user = pjb('#pjb-login #username').serialize();
+		password = pjb('#pjb-login #password').serialize();
+		
+		// hide login body
+		login_instance.close();
+		
+		var data = 'mode=login&' + user + '&' + password + '&location=' + location;
+		qe_do_ajax('login', data, true);
 	});
 }
 
@@ -336,6 +378,42 @@ function quickreply(success)
 }
 
 /**
+* handle login messages
+* @param (json) data
+*/
+function pjB_login(data)
+{
+	var is_error = false;
+	
+	try
+	{
+		var return_ary = JSON.parse(data);
+		is_error = true;
+	}
+	catch(e)
+	{
+		is_error = false;
+	}
+
+	
+	if(is_error)
+	{
+		for(i = 0; i < return_ary['ERROR_COUNT']; i++)
+		{
+			pjB_output_info('', return_ary['ERROR'][i], true);
+		}
+	}
+	else
+	{
+		pjB_output_info('{L_LOGIN_LOGOUT}', data['SUCCESS'], true);
+		setTimeout (
+			'window.location="' + data['LINK'] + '";', 
+			3000 // 3 seconds until page reload
+		);
+	}
+}
+
+/**
 * creates a new jQuery UI notification message
 * DO NOT use this for error messages
 *
@@ -401,6 +479,9 @@ function qe_do_ajax(mode, data, use_json)
 				break;
 				case 'quickreply':
 					quickreply(data);
+				break;
+				case 'login':
+					pjB_login(data);
 				break;
 			}
 		}

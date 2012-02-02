@@ -47,3 +47,14 @@
 .ui-notify-cross { margin-top:-4px; float:right; cursor:pointer; text-decoration:none; font-size:12px; font-weight:bold; text-shadow:0 1px 1px #fff; padding:2px }
 .ui-notify-cross:hover { color:#ffffab }
 .ui-notify-cross:active { position:relative; top:1px }
+
+/*
+* style for login box
+*/
+#pjb-login {
+	color: #FFFFFF;
+}
+
+#pjb-login a {
+	color: #5BA2DE;
+}

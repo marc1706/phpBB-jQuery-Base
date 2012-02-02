@@ -62,19 +62,19 @@ class phpbb_jquery_base
 		* if somebody previews a style using the style URL parameter, we need to do this
 		* this will not work for other cases
 		*/
-		if($this->forum_id < 1)
+		if ($this->forum_id < 1)
 		{
 			$this->forum_id = request_var('f', 0);
 		}
 		
 		// include needed files
-		switch($this->mode)
+		switch ($this->mode)
 		{
 			case 'quickreply':
 				// do nothing if quickreply is disabled
 				if ($config['pjb_quickreply_enable'])
 				{
-					if($auth->acl_get('u_quickreply'))
+					if ($auth->acl_get('u_quickreply'))
 					{
 						$this->include_file('includes/functions_posting', 'submit_post');
 					}
@@ -87,7 +87,7 @@ class phpbb_jquery_base
 				// do nothing if quickedit is disabled
 				if ($config['pjb_quickedit_enable'])
 				{
-					if($auth->acl_get('u_quickedit'))
+					if ($auth->acl_get('u_quickedit'))
 					{
 						$this->include_file('includes/functions_display', 'display_forums');
 						$this->include_file('includes/message_parser', 'bbcode_firstpass', true);
@@ -102,11 +102,20 @@ class phpbb_jquery_base
 			case 'markread_topics':
 				// don't need any
 			break;
+			case 'login':
+				if ($config['pjb_login_enable'])
+				{
+					if (!class_exists('phpbb_captcha_factory'))
+					{
+						include($phpbb_root_path . 'includes/captcha/captcha_factory.' . $phpEx);
+					}
+				}
+			break;
 			default:
 				$this->error[] = array('error' => 'NO_MODE', 'action' => 'cancel');
 		}
 		
-		if($set_no_auth == true)
+		if ($set_no_auth == true)
 		{
 			$this->error[] = array('error' => 'NO_AUTH_OPERATION', 'action' => 'cancel');
 		}
@@ -1815,16 +1824,50 @@ class phpbb_jquery_base
 	*/
 	private function login()
 	{
-		global $user;
+		global $user, $auth;
 		
+		$err = '';
+		
+		$user->add_lang('ucp');
+		
+		// only try to login if we aren't logged in yet
 		if ($user->data['user_id'] == ANONYMOUS)
 		{
-			login_box();
+			//login_box();
+			
+			$password	= request_var('password', '', true);
+			$username	= request_var('username', '', true);
+			$autologin	= (!empty($_POST['autologin'])) ? true : false;
+			$viewonline = (!empty($_POST['viewonline'])) ? 0 : 1;
+			
+			// try logging in
+			$result = $auth->login($username, $password, $autologin, $viewonline, false);
+			
+			// The result parameter is always an array, holding the relevant information...
+			if ($result['status'] == LOGIN_SUCCESS)
+			{
+				$message = $user->lang['LOGIN_REDIRECT'];
+				
+				// redirect to the same page we are currently on
+				$redirect = reapply_sid($this->location);
+				
+				// Special case... the user is effectively banned, but we allow founders to login
+				if (defined('IN_CHECK_BAN') && $result['user_row']['user_type'] != USER_FOUNDER)
+				{
+					$this->error[] = array('error' => 'NO_AUTH_OPERATION', 'action' => 'cancel');
+				}
+				$this->add_return(array(
+					'SUCCESS'	=> $message,
+					'LINK'		=> $redirect,
+				));
+			}
+			else
+			{
+				$this->error[] = array('error' => $result['error_msg'], 'action' => 'cancel');
+			}
 		}
 		else
 		{
-			$user->add_lang('ucp');
-
 			$this->add_return(array(
 				'SUCCESS'	=> $user->lang['LOGIN_REDIRECT'],
 			));
