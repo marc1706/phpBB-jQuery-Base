@@ -2,7 +2,7 @@
 /** 
 *
 * @package phpBB jQuery Base
-* @copyright (c) 2011 Marc Alexander(marc1706) www.m-a-styles.de
+* @copyright (c) 2012 Marc Alexander(marc1706) www.m-a-styles.de
 * @license http://opensource.org/licenses/gpl-license.php GNU Public License 
 *
 */
@@ -30,6 +30,7 @@ class phpbb_jquery_base
 	private $load_tpl = false;
 	private $return = array();
 	private $tpl_file;
+	private $return_ary = array();
 	public $config = array();
 	
 	/* 
@@ -41,13 +42,14 @@ class phpbb_jquery_base
 	*/
 	public function __construct()
 	{
-		global $user, $phpbb_root_path, $phpEx, $auth;
+		global $user, $phpbb_root_path, $phpEx, $auth, $config;
 		
 		$this->post_id = request_var('post_id', 0);
 		$this->mode = request_var('mode', '');
 		$this->location = request_var('location', '');
 		$this->submit = request_var('submit', false);
 		$this->obtain_config();
+		$set_no_auth = false;
 
 		// provide a valid location (need for some functions)
 		$this->location = utf8_normalize_nfc(request_var('location', '', true));
@@ -69,6 +71,7 @@ class phpbb_jquery_base
 		switch($this->mode)
 		{
 			case 'quickreply':
+				// do nothing if quickreply is disabled
 				if ($config['pjb_quickreply_enable'])
 				{
 					if($auth->acl_get('u_quickreply'))
@@ -77,19 +80,21 @@ class phpbb_jquery_base
 					}
 					else
 					{
-						$this->error[] = array('error' => 'NO_AUTH_OPERATION', 'action' => 'cancel');
+						$set_no_auth = true;
 					}
 				}
 			case 'quickedit':
+				// do nothing if quickedit is disabled
 				if ($config['pjb_quickedit_enable'])
 				{
 					if($auth->acl_get('u_quickedit'))
 					{
 						$this->include_file('includes/functions_display', 'display_forums');
 						$this->include_file('includes/message_parser', 'bbcode_firstpass', true);
+					}
 					else
 					{
-						$this->error[] = array('error' => 'NO_AUTH_OPERATION', 'action' => 'cancel');
+						$set_no_auth = true;
 					}
 				}
 			break;
@@ -99,6 +104,11 @@ class phpbb_jquery_base
 			break;
 			default:
 				$this->error[] = array('error' => 'NO_MODE', 'action' => 'cancel');
+		}
+		
+		if($set_no_auth == true)
+		{
+			$this->error[] = array('error' => 'NO_AUTH_OPERATION', 'action' => 'cancel');
 		}
 	}
 	
@@ -130,24 +140,41 @@ class phpbb_jquery_base
 	*/
 	public function run_actions()
 	{
+		global $config, $auth;
+
 		// don't do anything if we already have an error because it can only be a "NO_MODE" error
 		if(empty($error))
 		{
 			switch($this->mode)
 			{
 				case 'quickreply':
-					$this->quickreply();
+					if ($config['pjb_quickreply_enable'] && $auth->acl_get('u_quickreply'))
+					{
+						$this->quickreply();
+					}
 				break;
 				case 'quickedit':
-					$this->quickedit();
+					if ($config['pjb_quickedit_enable'] && $auth->acl_get('u_quickedit'))
+					{
+						$this->quickedit();
+					}
 				break;
 				case 'markread_forums':
-					$this->mark_read('forums');
+					if ($config['pjb_markread_enable'])
+					{
+						$this->mark_read('forums');
+					}
 				break;
 				case 'markread_topics':
-					$this->mark_read('topics');
+					if ($config['pjb_markread_enable'])
+					{
+						$this->mark_read('topics');
+					}
 				case 'login':
-					$this->login();
+					if ($config['pjb_login_enable'])
+					{
+						$this->login();
+					}
 			}
 		}
 	}
@@ -159,7 +186,7 @@ class phpbb_jquery_base
 	*/
 	public function page_footer()
 	{
-		global $template;
+		global $template, $user;
 
 		if(!empty($this->error))
 		{
@@ -171,7 +198,8 @@ class phpbb_jquery_base
 					$this->load_tpl = false; // make sure we don't load any template
 					$this->return_ary['ERROR_ACTION'] = 'cancel';
 				}
-				$this->return_ary['ERROR'][] = $cur_error['error'];
+				// replace lang vars if possible
+				$this->return_ary['ERROR'][] = (isset($user->lang[$cur_error['error']])) ? $user->lang[$cur_error['error']] : $cur_error['error'];
 			}
 			$this->return_ary['ERROR_COUNT'] = sizeof($this->return_ary['ERROR']);
 		}
