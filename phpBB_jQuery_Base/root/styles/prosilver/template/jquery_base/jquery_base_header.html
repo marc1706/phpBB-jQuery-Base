@@ -20,6 +20,20 @@ var edited_by_div = '#post\%d div.notice';
 var popup_open = false;
 var cur_post_id = 0;
 var login_instance;
+var new_pm_count = 0;
+
+/**
+* HTML code for login body
+*/
+var login_body = 
+message = '<div id="pjb-login">' + 
+'<span class="genmed">{L_USERNAME}:</span><br />' + 
+'<input type="text" tabindex="1" name="username" id="username" value="" class="inputbox autowidth" /><br /><br />' + 
+'<span class="genmed">{L_PASSWORD}:</span><br />' + 
+'<input type="password" tabindex="2" id="password" name="password" class="inputbox autowidth" /><br /><br />' + 
+'<input type="checkbox" class="radio" name="autologin" tabindex="3" /> <span class="gensmall">{L_LOG_ME_IN}</span><br /><br />' + 
+'<a href="{U_REGISTER}">{L_REGISTER}</a><br /><br />' + 
+'<input type="submit" name="login" tabindex="5" value="{L_LOGIN}" class="button1" /></div>';
 
 var logged_in = '{S_USER_LOGGED_IN}';
 
@@ -103,11 +117,7 @@ pjb(document).ready(function(){
 			* create HTML for login box
 			* nobody said this would look nice ...
 			*/
-			message = '<div id="pjb-login"><span class="genmed">{L_USERNAME}:</span><br /><input type="text" tabindex="1" name="username" id="username" value="" class="inputbox autowidth" /><br /><br /><span class="genmed">{L_PASSWORD}:</span><br /><input type="password" tabindex="2" id="password" name="password" class="inputbox autowidth" />';
-			message += '<br /><br />';
-			message += '<input type="checkbox" class="radio" name="autologin" tabindex="3" /> <span class="gensmall">{L_LOG_ME_IN}</span><br />';
-			message += '<br /><a href="{U_REGISTER}">{L_REGISTER}</a><br />';
-			message += '<br /><input type="submit" name="login" tabindex="5" value="{L_LOGIN}" class="button1" /></div>';
+			message = login_body;
 			
 			login_instance = pjb("#container").notify("create", {
 				title: "{L_LOGIN_LOGOUT}",
@@ -124,19 +134,22 @@ pjb(document).ready(function(){
 	pjb("#container").notify();
 	
 	// show "new" PM popup
-	<!-- IF S_USER_PM_POPUP -->
-	if ({S_NEW_PM})
+	<!-- IF S_USER_PM_POPUP and S_NEW_PM -->
+	if(logged_in)
 	{
-		if(logged_in)
-		{
-			pjB_output_info('<a id="popupHeader" href="{U_PRIVATEMSGS}">{PRIVATE_MESSAGE_INFO}</a>', '{LA_YOU_NEW_PM}<br /><br /><a class="postlink" href="{U_PRIVATEMSGS}">{LA_PROFILE}</a>', false);
-		}
-		else
-		{
-			pjB_output_info('<a id="popupHeader" href="{U_PRIVATEMSGS}">{PRIVATE_MESSAGE_INFO}</a>', '{LA_LOGIN_CHECK_PM}', false);
-		}
+		pjB_output_info('<a id="popupHeader" href="{U_PRIVATEMSGS}">{PRIVATE_MESSAGE_INFO}</a>', '{LA_YOU_NEW_PM}<br /><br /><a class="postlink" href="{U_PRIVATEMSGS}">{LA_PROFILE}</a>', false);
+	}
+	else
+	{
+		pjB_output_info('<a id="popupHeader" href="{U_PRIVATEMSGS}">{PRIVATE_MESSAGE_INFO}</a>', '{LA_LOGIN_CHECK_PM}', false);
 	}
 	<!-- ENDIF -->
+	
+	// check for new PMs every 2 minutes
+	setInterval(function() {
+		qe_do_ajax('check_pm', 'mode=check_pm', true);
+	}, 1000 * 60 * 1); // 1000 ms * 60 = 60 s * 2 = 2 minutes
+
 });
 
 /*
@@ -382,23 +395,10 @@ function quickreply(success)
 * @param (json) data
 */
 function pjB_login(data)
-{
-	var is_error = false;
-	
-	try
+{	
+	if(data['ERROR'])
 	{
-		var return_ary = JSON.parse(data);
-		is_error = true;
-	}
-	catch(e)
-	{
-		is_error = false;
-	}
-
-	
-	if(is_error)
-	{
-		for(i = 0; i < return_ary['ERROR_COUNT']; i++)
+		for(i = 0; i < data['ERROR_COUNT']; i++)
 		{
 			pjB_output_info('', return_ary['ERROR'][i], true);
 		}
@@ -410,6 +410,26 @@ function pjB_login(data)
 			'window.location="' + data['LINK'] + '";', 
 			3000 // 3 seconds until page reload
 		);
+	}
+}
+
+/**
+* check for new PMs
+* if there are any update new PM message, if needed
+*
+* @param (JSON) Json data holding info for new PMs
+*/
+function pjB_check_pm(data)
+{
+	/*
+	* oh no, no error handling ...
+	* what did you expect? something like this?: "There was an error while trying to check for new PMs"
+	* exactly, totally useless error message ...
+	*/
+	if(new_pm_count != data['NEW_PM_COUNT'] && data['NEW_PM_COUNT'] > 0 && data['NEW_PM'])
+	{
+		pjB_output_info('<a id="popupHeader" href="{U_PRIVATEMSGS}">' + data['NEW_PM_MSG'] + '</a>', '{LA_YOU_NEW_PM}<br /><br /><a class="postlink" href="{U_PRIVATEMSGS}">{LA_PROFILE}</a>', false);
+		new_pm_count = data['NEW_PM_COUNT'];
 	}
 }
 
@@ -441,7 +461,7 @@ function pjB_output_info(title, message, expire)
 	}
 }
 
-/* 
+/** 
 * general AJAX function
 * @todo: get a new name :D
 */
@@ -482,6 +502,9 @@ function qe_do_ajax(mode, data, use_json)
 				break;
 				case 'login':
 					pjB_login(data);
+				break;
+				case 'check_pm':
+					pjB_check_pm(data);
 				break;
 			}
 		}

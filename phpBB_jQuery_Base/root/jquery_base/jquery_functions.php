@@ -100,6 +100,7 @@ class phpbb_jquery_base
 			break;
 			case 'markread_forums':
 			case 'markread_topics':
+			case 'check_pm':
 				// don't need any
 			break;
 			case 'login':
@@ -179,11 +180,17 @@ class phpbb_jquery_base
 					{
 						$this->mark_read('topics');
 					}
+				break;
 				case 'login':
 					if ($config['pjb_login_enable'])
 					{
 						$this->login();
 					}
+				break;
+				case 'check_pm':
+					// add check ... maybe
+					$this->check_pm();
+				break;
 			}
 		}
 	}
@@ -1872,5 +1879,76 @@ class phpbb_jquery_base
 				'SUCCESS'	=> $user->lang['LOGIN_REDIRECT'],
 			));
 		}
+	}
+	
+	/**
+	* check for new PMs
+	*
+	* return
+	*/
+	private function check_pm()
+	{
+		global $user, $db;
+		
+		$l_privmsgs_text = $l_privmsgs_text_unread = '';
+		$s_privmsg_new = false;
+		
+		// Obtain number of new private messages if user is logged in
+		if (!empty($user->data['is_registered']))
+		{
+			if ($user->data['user_new_privmsg'])
+			{
+				$l_message_new = ($user->data['user_new_privmsg'] == 1) ? $user->lang['NEW_PM'] : $user->lang['NEW_PMS'];
+				$l_privmsgs_text = sprintf($l_message_new, $user->data['user_new_privmsg']);
+
+				/*
+				* DO NOT update the session table
+				* While it is possible that this causes the user to see this message twice,
+				* updating the session table could possibly cause the user to not see the
+				* message at all, i.e. when the ajax is currently in progress and the user
+				* refreshes the page or switches pages.
+				* We will check if we need to update the shown message in the jQuery code
+				* by checking if the number of unread PMs has changed. If we don't do this
+				* the user will have endless number of pop-up messages or he will get a
+				* pop-up message, stating that he has new PMs, everytime this is executed.
+				*/
+				if (!$user->data['user_last_privmsg'] || $user->data['user_last_privmsg'] > $user->data['session_last_visit'])
+				{
+					/* @todo: remove this ...
+					$sql = 'UPDATE ' . USERS_TABLE . '
+						SET user_last_privmsg = ' . $user->data['session_last_visit'] . '
+						WHERE user_id = ' . $user->data['user_id'];
+					$db->sql_query($sql);
+					*/
+
+					$s_privmsg_new = true;
+				}
+				else
+				{
+					$s_privmsg_new = false;
+				}
+			}
+			else
+			{
+				$l_privmsgs_text = $user->lang['NO_NEW_PM'];
+				$s_privmsg_new = false;
+			}
+
+			$l_privmsgs_text_unread = '';
+
+			// looks useless to me since it never get's used in the PM Popup. Therefore: @todo: remove this ...
+			if ($user->data['user_unread_privmsg'] && $user->data['user_unread_privmsg'] != $user->data['user_new_privmsg'])
+			{
+				$l_message_unread = ($user->data['user_unread_privmsg'] == 1) ? $user->lang['UNREAD_PM'] : $user->lang['UNREAD_PMS'];
+				$l_privmsgs_text_unread = sprintf($l_message_unread, $user->data['user_unread_privmsg']);
+			}
+			//echo '<br />' . $l_privmsgs_text . '<br />' . $l_privmsgs_text_unread . '<br />' . $s_privmsg_new . '<br />';
+			$this->add_return(array(
+				'NEW_PM_COUNT'	=> $user->data['user_new_privmsg'],
+				'NEW_PM_MSG'	=> $l_privmsgs_text,
+				'NEW_PM'		=> $s_privmsg_new,
+			));
+		}
+		// no else, we'll just ignore Anonymous ;)
 	}
 }
