@@ -145,10 +145,13 @@ pjb(document).ready(function(){
 	}
 	<!-- ENDIF -->
 	
-	// check for new PMs every 2 minutes
+	/* 
+	* check for new PMs every 2 minutes
+	* @todo: change this to an ACP setting
+	*/
 	setInterval(function() {
 		qe_do_ajax('check_pm', 'mode=check_pm', true);
-	}, 1000 * 60 * 1); // 1000 ms * 60 = 60 s * 2 = 2 minutes
+	}, 1000 * 60 * 2); // 1000 ms * 60 = 60 s * 2 = 2 minutes
 
 });
 
