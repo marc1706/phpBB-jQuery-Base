@@ -105,7 +105,7 @@ pjb(document).ready(function(){
 				data += '&reply_data' + i + '=' + pjb(this).attr('name') + '&reply_data_val' + i + '=' + pjb(this).val();
 				i++;
 			});
-			qe_do_ajax('quickreply', data, false);
+			qe_do_ajax('quickreply', data, true);
 		}
 	});
 	
@@ -331,21 +331,7 @@ function mark_read(success)
 */
 function quickreply(success)
 {
-	var is_error = false;
-	var append_msg = true;
-	
-	try
-	{
-		var return_ary = JSON.parse(success);
-		is_error = true;
-	}
-	catch(e)
-	{
-		is_error = false;
-	}
-
-	
-	if(is_error)
+	if(success['ERROR_COUNT'])
 	{
 		for(i = 0; i < return_ary['ERROR_COUNT']; i++)
 		{
@@ -354,66 +340,48 @@ function quickreply(success)
 	}
 	else
 	{
-		pjb('#pjb-quickreply').append(success);
-		var cur_id = '';
-		/*
-		* using this we can get the last id of our quickreply
-		* this should be done using the :last select, unfortunately that doesn't work
-		*/
-		pjb('#pjb-quickreply').children().each( function () {
-			cur_id = pjb(this).attr('id');
-		});
-		
-		// we need to bind the click to the new quickedit button
-		pjb('.qe-icon a').bind('click', function() {
-			post_id = pjb(this).attr('id');
-			post_id = post_id.replace(/quickedit/g, ''); // filter out the post ID
-
-			// check if quick edit is already enabled
-			if(popup_open != true)
-			{
-				cur_location = pjb(location).attr('href');
-				data = 'mode=quickedit&qe_mode=init&post_id=' + post_id + '&location=' + location;
-				qe_do_ajax('open', data, false);
-				popup_open = true;
-				cur_post_id = post_id;
-			}
-		});
-		
 		// try to redirect to the last page where we should actually see the post
-		try
+		if (success['SUCCESS_REDIRECT'] == true)
 		{
-			var success_msg = JSON.parse(pjb('#' + cur_id + ' .success-msg').html());
-			if (success_msg['SUCCESS_REDIRECT'] == true)
-			{
-				var append_msg = false;
-				var redirect_url = success_msg['SUCCESS_REDIRECT_URL'].replace(/&amp;/g, '&');
-				setTimeout (
-					'window.location="' + redirect_url + '";', 
-					1000 // 3 seconds until page reload
-				);
-			}
+			var redirect_url = success['SUCCESS_REDIRECT_URL'].replace(/&amp;/g, '&');
+			setTimeout (
+				'window.location="' + redirect_url + '";', 
+				1000 // 3 seconds until page reload
+			);
 		}
-		catch (e)
+		else
 		{
-			// well, sucks for you and your browser ...
-		}
+			pjb('#pjb-quickreply').append(success['TPL_BODY']);
+			var cur_id = '';
+			/*
+			* using this we can get the last id of our quickreply
+			* this should be done using the :last select, unfortunately that doesn't work
+			*/
+			pjb('#pjb-quickreply').children().each( function () {
+				cur_id = pjb(this).attr('id');
+			});
+			
+			// we need to bind the click to the new quickedit button
+			pjb('.qe-icon a').bind('click', function() {
+				post_id = pjb(this).attr('id');
+				post_id = post_id.replace(/quickedit/g, ''); // filter out the post ID
 
-		if (append_msg == true)
-		{
+				// check if quick edit is already enabled
+				if(popup_open != true)
+				{
+					cur_location = pjb(location).attr('href');
+					data = 'mode=quickedit&qe_mode=init&post_id=' + post_id + '&location=' + location;
+					qe_do_ajax('open', data, false);
+					popup_open = true;
+					cur_post_id = post_id;
+				}
+			});
+
 			pjb('#qr_editor_div textarea.inputbox').val('');
 			pjb('#' + cur_id).fadeIn('slow');
-		}
-		
-		try
-		{
-			// no matter what we do up there, just get a clean JSON array
-			var success_msg = JSON.parse(pjb('#' + cur_id + ' .success-msg').html());
-			pjB_output_info(success_msg['SUCCESS_TITLE'], success_msg['SUCCESS_MESSAGE'], true)
-		}
-		catch(e)
-		{
-			// don't care
+			
+			// @todo: add ACP option for all those spam ... I mean popup messages
+			pjB_output_info(success['SUCCESS_TITLE'], success['SUCCESS_MESSAGE'], true)
 		}
 	}
 }

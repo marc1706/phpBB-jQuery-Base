@@ -428,6 +428,7 @@ class phpbb_jquery_base
 					'MAX_FONT_SIZE'			=> (int) $config['max_post_font_size'],
 				));
 				
+				// @todo: we don't need to set this to true. take a look at quickreply
 				$this->load_tpl = true;
 
 				$this->tpl_file = 'jquery_base/quickedit.html';
@@ -917,6 +918,7 @@ class phpbb_jquery_base
 				));
 				
 				$this->tpl_file = 'jquery_base/quickedit.html';
+				// @todo: we don't need to set this to true. take a look at quickreply
 				$this->load_tpl = true;
 			
 			break;
@@ -1572,14 +1574,6 @@ class phpbb_jquery_base
 			// Parse the post
 			$message = generate_text_for_display($data['message'], $data['bbcode_uid'], $data['bbcode_bitfield'], $bbcode_options);
 			
-			// And the success message
-			$success_msg = json_encode(array(
-				'SUCCESS_MESSAGE'		=> $user->lang['PJB_QUICKREPLY_SUCCESS_MSG'],
-				'SUCCESS_TITLE'			=> $user->lang['PJB_QUICKREPLY_SUCCESS'],
-				'SUCCESS_REDIRECT'		=> $redirect,
-				'SUCCESS_REDIRECT_URL'	=> $redirect_url,
-			));
-			
 			$postrow = array(
 				'POST_AUTHOR_FULL'		=> ($poster_id != ANONYMOUS) ? $user_cache[$poster_id]['author_full'] : get_username_string('full', $poster_id, $row['username'], $row['user_colour'], $row['post_username']),
 				'POST_AUTHOR_COLOUR'	=> ($poster_id != ANONYMOUS) ? $user_cache[$poster_id]['author_colour'] : get_username_string('colour', $poster_id, $row['username'], $row['user_colour'], $row['post_username']),
@@ -1652,15 +1646,29 @@ class phpbb_jquery_base
 
 				'S_IGNORE_POST'		=> ($row['hide_post']) ? true : false,
 				'L_IGNORE_POST'		=> ($row['hide_post']) ? sprintf($user->lang['POST_BY_FOE'], get_username_string('full', $poster_id, $row['username'], $row['user_colour'], $row['post_username']), '<a href="' . $viewtopic_url . "&amp;p=$post_id&amp;view=show#p$post_id" . '">', '</a>') : '',
-				'SUCCESS_MSG'		=> $success_msg,
 			);
 
 			// Dump vars into template
 			$template->assign_block_vars('postrow', $postrow);
+			$this->load_tpl = false;
 
-			$this->load_tpl = true;
+			$template->set_filenames(array(
+						'body' =>'jquery_base/quickreply.html')
+					);
+			/*
+			* @todo: for phpBB 3.1.x:
+			* replace $template->assign_display with $template->get_rendered_template
+			* more info here: http://tracker.phpbb.com/browse/PHPBB3-10644
+			*/
+			$tpl_content = $template->assign_display('body');
 			
-			$this->tpl_file = 'jquery_base/quickreply.html';
+			$this->add_return(array(
+				'SUCCESS_MESSAGE'		=> $user->lang['PJB_QUICKREPLY_SUCCESS_MSG'],
+				'SUCCESS_TITLE'			=> $user->lang['PJB_QUICKREPLY_SUCCESS'],
+				'SUCCESS_REDIRECT'		=> $redirect,
+				'SUCCESS_REDIRECT_URL'	=> $redirect_url,
+				'TPL_BODY'				=> $tpl_content,
+			));
 		}
 	}
 
