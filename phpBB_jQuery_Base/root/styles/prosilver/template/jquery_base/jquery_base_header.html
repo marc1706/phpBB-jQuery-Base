@@ -93,10 +93,12 @@ pjb(document).ready(function(){
 		{
 			event.preventDefault();
 			var data = 'mode=quickreply';
+			cur_location = pjb(location).attr('href');
 			
 			// get some more info, i.e. subject
 			data += '&subject=' + pjb('#qr_editor_div input#subject').val();
 			data += '&' + pjb('#qr_editor_div textarea.inputbox').serialize();
+			data += '&location=' + cur_location;
 
 			var i = 1;
 			pjb('#qr_editor_div input:hidden').each(function() {
@@ -330,6 +332,7 @@ function mark_read(success)
 function quickreply(success)
 {
 	var is_error = false;
+	var append_msg = true;
 	
 	try
 	{
@@ -352,7 +355,6 @@ function quickreply(success)
 	else
 	{
 		pjb('#pjb-quickreply').append(success);
-		
 		var cur_id = '';
 		/*
 		* using this we can get the last id of our quickreply
@@ -377,12 +379,35 @@ function quickreply(success)
 				cur_post_id = post_id;
 			}
 		});
+		
+		// try to redirect to the last page where we should actually see the post
+		try
+		{
+			var success_msg = JSON.parse(pjb('#' + cur_id + ' .success-msg').html());
+			if (success_msg['SUCCESS_REDIRECT'] == true)
+			{
+				var append_msg = false;
+				var redirect_url = success_msg['SUCCESS_REDIRECT_URL'].replace(/&amp;/g, '&');
+				setTimeout (
+					'window.location="' + redirect_url + '";', 
+					1000 // 3 seconds until page reload
+				);
+			}
+		}
+		catch (e)
+		{
+			// well, sucks for you and your browser ...
+		}
 
-		pjb('#qr_editor_div textarea.inputbox').val('');
-		pjb('#' + cur_id).fadeIn('slow');
+		if (append_msg == true)
+		{
+			pjb('#qr_editor_div textarea.inputbox').val('');
+			pjb('#' + cur_id).fadeIn('slow');
+		}
 		
 		try
 		{
+			// no matter what we do up there, just get a clean JSON array
 			var success_msg = JSON.parse(pjb('#' + cur_id + ' .success-msg').html());
 			pjB_output_info(success_msg['SUCCESS_TITLE'], success_msg['SUCCESS_MESSAGE'], true)
 		}

@@ -940,6 +940,7 @@ class phpbb_jquery_base
 		
 		$current_time = time();
 		
+		// get post data from jQuery
 		while(isset($_POST["reply_data$i"]))
 		{
 			$cur_name = utf8_normalize_nfc(request_var("reply_data$i", ''));
@@ -970,6 +971,9 @@ class phpbb_jquery_base
 		$db->sql_freeresult($result);
 
 		$reply_data['forum_id'] = (!$f_id) ? (int) $reply_data['forum_id'] : $f_id;
+		
+		// find out which page we are on
+		$page_start = request_var('start', 0); // cut everything before start
 		
 		$sql = 'SELECT f.*, t.*
 			FROM ' . TOPICS_TABLE . ' t, ' . FORUMS_TABLE . " f
@@ -1284,6 +1288,75 @@ class phpbb_jquery_base
 			// The last parameter tells submit_post if search indexer has to be run
 			$redirect_url = submit_post('reply', $post_data['post_subject'], $post_data['username'], $post_data['topic_type'], $poll, $data, $update_message, ($update_message) ? true : false);
 			
+			// redirect to redirect_url if we are not on the same page
+			$cur_posts = (($auth->acl_get('m_approve', $data['forum_id'])) ? $post_data['topic_replies'] : $post_data['topic_replies_real']) + 1;
+			$cur_page = floor($cur_posts / $config['posts_per_page']) * $config['posts_per_page'];
+			$redirect = ($cur_page != $page_start) ? true : false;
+			
+			// check if we are maybe on a page without the start parameter but with the p parameter
+			$cur_post_id = request_var('p', 0);
+			$sort_dir	= request_var('sd', (!empty($user->data['user_post_sortby_dir'])) ? $user->data['user_post_sortby_dir'] : 'a');
+			// This is for determining where we are (page)
+			if ($cur_post_id)
+			{
+				// are we where we are supposed to be?
+				if (!$data['post_approved'] && !$auth->acl_get('m_approve', $post_data['forum_id']))
+				{
+					// If post_id was submitted, we try at least to display the topic as a last resort...
+					if ($data['topic_id'])
+					{
+						$redirect_url = append_sid("{$phpbb_root_path}viewtopic.$phpEx", "t={$data['topic_id']}" . (($forum_id) ? "&amp;f={$data['forum_id']}" : ''));
+					}
+					else
+					{
+						$this->error[] = array('error' => 'NO_TOPIC', 'action' => 'return');
+					}
+				}
+				if ($cur_post_id == $post_data['topic_first_post_id'] || $cur_post_id == $post_data['topic_last_post_id'])
+				{
+					$check_sort = ($cur_post_id == $post_data['topic_first_post_id']) ? 'd' : 'a';
+
+					if ($sort_dir == $check_sort)
+					{
+						$post_data['prev_posts'] = ($auth->acl_get('m_approve', $data['forum_id'])) ? $post_data['topic_replies_real'] : $post_data['topic_replies'];
+					}
+					else
+					{
+						$post_data['prev_posts'] = 0;
+					}
+				}
+				else
+				{
+					$sql = 'SELECT COUNT(p.post_id) AS prev_posts
+						FROM ' . POSTS_TABLE . " p
+						WHERE p.topic_id = {$post_data['topic_id']}
+							" . ((!$auth->acl_get('m_approve', $data['forum_id'])) ? 'AND p.post_approved = 1' : '');
+
+					if ($sort_dir == 'd')
+					{
+						$sql .= " AND (p.post_time > {$data['post_time']} OR (p.post_time = {$data['post_time']} AND p.post_id >= {$data['post_id']}))";
+					}
+					else
+					{
+						$sql .= " AND (p.post_time < {$data['post_time']} OR (p.post_time = {$data['post_time']} AND p.post_id <= {$data['post_id']}))";
+					}
+
+					$result = $db->sql_query($sql);
+					$row = $db->sql_fetchrow($result);
+					$db->sql_freeresult($result);
+
+					$post_data['prev_posts'] = $row['prev_posts'] - 1;
+				}
+			}
+			
+			// no matter what $redirect is set to, make sure we don't do an unnecessary redirect
+			if (isset($post_data['prev_posts']) && !empty($post_data['prev_posts']))
+			{
+				$cur_page = floor($cur_posts / $config['posts_per_page']) * $config['posts_per_page'];
+				$page_start = floor($post_data['prev_posts'] / $config['posts_per_page']) * $config['posts_per_page'];
+				$redirect = ($cur_page != $page_start) ? true : false;
+			}
+			
 			// Now get the post id of the new post
 			$post_id = $data['post_id'];
 			
@@ -1501,8 +1574,10 @@ class phpbb_jquery_base
 			
 			// And the success message
 			$success_msg = json_encode(array(
-				'SUCCESS_MESSAGE' => $user->lang['PJB_QUICKREPLY_SUCCESS_MSG'],
-				'SUCCESS_TITLE' => $user->lang['PJB_QUICKREPLY_SUCCESS'],
+				'SUCCESS_MESSAGE'		=> $user->lang['PJB_QUICKREPLY_SUCCESS_MSG'],
+				'SUCCESS_TITLE'			=> $user->lang['PJB_QUICKREPLY_SUCCESS'],
+				'SUCCESS_REDIRECT'		=> $redirect,
+				'SUCCESS_REDIRECT_URL'	=> $redirect_url,
 			));
 			
 			$postrow = array(
@@ -1582,79 +1657,11 @@ class phpbb_jquery_base
 
 			// Dump vars into template
 			$template->assign_block_vars('postrow', $postrow);
-			
-			
-			
-			
-			
-			
-			
-			
+
 			$this->load_tpl = true;
 			
 			$this->tpl_file = 'jquery_base/quickreply.html';
 		}
-		
-		
-		
-		
-		
-		//$this->add_return($data);
-		
-		/* Create the data array for submit_post
-		$data = array(
-			// General Posting Settings
-			'forum_id'          	=> $post_data['forum_id'],
-			'topic_id'          	=> $post_data['topic_id'],
-			'icon_id'           	=> $post_data['post_icon_id'],
-			'post_id'			=> $post_data['post_id'],
-			'poster_id'			=> $post_data['poster_id'],
-			'topic_replies'		=> $post_data['topic_replies'],
-			'topic_replies_real'	=> $post_data['topic_replies_real'],
-			'topic_first_post_id'	=> $post_data['topic_first_post_id'],
-			'topic_last_post_id'	=> $post_data['topic_last_post_id'],
-			'post_edit_user'		=> $edit_user,
-			'forum_parents'		=> $post_data['forum_parents'],
-			'forum_name'		=> $post_data['forum_name'],
-			'topic_poster'		=> $post_data['topic_poster'],
-		
-			// Defining Post Options
-			'enable_bbcode' 	=> $post_data['enable_bbcode'],
-			'enable_smilies'    => $post_data['enable_smilies'],
-			'enable_urls'       => $post_data['enable_magic_url'],
-			'enable_sig'        => $post_data['enable_sig'],
-			'topic_attachment'	=> (isset($post_data['topic_attachment'])) ? (int) $post_data['topic_attachment'] : 0,
-			'poster_ip'			=> (isset($post_data['poster_ip'])) ? $post_data['poster_ip'] : $user->ip,
-			'attachment_data'	=> $message_parser->attachment_data,
-			'filename_data'		=> $message_parser->filename_data,
-		
-			// Message Body
-			'message'           => $message_parser->message,
-			'message_md5'   	=> md5($message_parser->message),
-		
-			// Values from generate_text_for_storage()
-			'bbcode_bitfield'   => $bitfield,
-			'bbcode_uid'        => $uid,
-		
-			// Other Options
-			'post_edit_locked'  => $post_data['post_edit_locked'],
-			'post_edit_reason'	=> ($post_data['post_edit_reason']) ? $post_data['post_edit_reason'] : '',
-			'topic_title'       => $post_data['topic_title'],
-			'topic_time_limit'	=> ($post_data['topic_time_limit']) ? $post_data['topic_time_limit'] : 0,
-		
-			// Email Notification Settings
-			'notify_set'        => false,
-			'notify'            => false,
-			'post_time'         => 0,
-			'forum_name'        => $post_data['forum_name'],
-		
-			// Indexing
-			'enable_indexing'   => true,
-		
-			// 3.0.6
-			'force_approved_state'  => true, // post has already been approved
-		);
-		*/
 	}
 
 	/*
