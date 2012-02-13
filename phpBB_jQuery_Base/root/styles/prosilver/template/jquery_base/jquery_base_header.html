@@ -59,7 +59,7 @@ pjb(document).ready(function(){
 		{
 			cur_location = pjb(location).attr('href');
 			data = 'mode=quickedit&qe_mode=init&post_id=' + post_id + '&location=' + location;
-			qe_do_ajax('open', data, true);
+			pjB_do_ajax('open', data, true);
 			popup_open = true;
 			cur_post_id = post_id;
 		}
@@ -71,7 +71,7 @@ pjb(document).ready(function(){
 		{
 			cur_location = pjb(location).attr('href');
 			data = 'mode=markread_forums&location=' + location;
-			qe_do_ajax('mark_read', data, true);
+			pjB_do_ajax('mark_read', data, true);
 			return false;
 		}
 	});
@@ -82,7 +82,7 @@ pjb(document).ready(function(){
 		{
 			cur_location = pjb(location).attr('href');
 			data = 'mode=markread_topics&location=' + location;
-			qe_do_ajax('mark_read', data, true);
+			pjB_do_ajax('mark_read', data, true);
 			return false;
 		}
 	});
@@ -105,7 +105,7 @@ pjb(document).ready(function(){
 				data += '&reply_data' + i + '=' + pjb(this).attr('name') + '&reply_data_val' + i + '=' + pjb(this).val();
 				i++;
 			});
-			qe_do_ajax('quickreply', data, true);
+			pjB_do_ajax('quickreply', data, true);
 		}
 	});
 	
@@ -152,7 +152,7 @@ pjb(document).ready(function(){
 	* @todo: change this to an ACP setting
 	*/
 	setInterval(function() {
-		qe_do_ajax('check_pm', 'mode=check_pm', true);
+		pjB_do_ajax('check_pm', 'mode=check_pm', true);
 	}, 1000 * 60 * 2); // 1000 ms * 60 = 60 s * 2 = 2 minutes
 
 });
@@ -189,7 +189,7 @@ function bind_quickedit_buttons()
 			content = content.substring(8); // make sure we get rid of the 'message=' in front of the post text
 			cur_location = pjb(location).attr('href');
 			data = 'mode=quickedit&qe_mode=submit&post_id=' + post_id + '&contents=' + content + '&location=' + location;
-			qe_do_ajax('submit', data, true);
+			pjB_do_ajax('submit', data, true);
 		}
 	});
 	
@@ -208,9 +208,7 @@ function bind_quickedit_buttons()
 		if(quickedit_open == true)
 		{
 			// get current url for forum_id if we have a global announcement
-			cur_location = pjb(location).attr('href');
 			content = pjb('textarea#jqe-message').val();
-			data = 'mode=quickedit&qe_mode=advanced_edit&post_id=' + post_id + '&contents=' + content + '&location=' + location;
 			pjb('input[name="message"]:hidden').val(content);
 		}
 	});
@@ -226,7 +224,7 @@ function bind_quickedit_buttons()
 		login_instance.close();
 		
 		var data = 'mode=login&' + user + '&' + password + '&location=' + location;
-		qe_do_ajax('login', data, true);
+		pjB_do_ajax('login', data, true);
 	});
 }
 
@@ -358,7 +356,7 @@ function quickreply(success)
 				{
 					cur_location = pjb(location).attr('href');
 					data = 'mode=quickedit&qe_mode=init&post_id=' + post_id + '&location=' + location;
-					qe_do_ajax('open', data, false);
+					pjB_do_ajax('open', data, false);
 					popup_open = true;
 					cur_post_id = post_id;
 				}
@@ -446,9 +444,8 @@ function pjB_output_info(title, message, expire)
 
 /** 
 * general AJAX function
-* @todo: get a new name :D
 */
-function qe_do_ajax(mode, data, use_json)
+function pjB_do_ajax(mode, data, use_json)
 {
 	if(use_json)
 	{
