@@ -427,11 +427,23 @@ class phpbb_jquery_base
 					'S_BBCODE_ALLOWED'		=> $bbcode_status,
 					'MAX_FONT_SIZE'			=> (int) $config['max_post_font_size'],
 				));
-				
-				// @todo: we don't need to set this to true. take a look at quickreply
-				$this->load_tpl = true;
 
-				$this->tpl_file = 'jquery_base/quickedit.html';
+				$this->load_tpl = false;
+				
+				$template->set_filenames(array(
+						'body' =>'jquery_base/quickedit.html')
+					);
+				/*
+				* @todo: for phpBB 3.1.x:
+				* replace $template->assign_display with $template->get_rendered_template
+				* more info here: http://tracker.phpbb.com/browse/PHPBB3-10644
+				*/
+				$tpl_content = $template->assign_display('body');
+				
+				$this->add_return(array(
+					'TPL_BODY'				=> $tpl_content,
+				));
+				
 			break;
 			
 			case 'submit':
@@ -780,147 +792,6 @@ class phpbb_jquery_base
 					$this->load_tpl = false;
 				}
 				
-			break;
-			
-			case 'advanced_edit':
-				/* 
-				* Since we only pass on the post text and this won't be entered into the database, we shouldn't need to worry about checking for permissions.
-				* But we don't want to user to end up on an error page.
-				* Therefore we will check if the user able to actually edit this post.
-				* If the user is not authorized to edit the post, we will close the quickedit but we still need it to look good.
-				*/
-				$sql = 'SELECT p.*, f.*, t.*
-						FROM ' . POSTS_TABLE . ' p, ' . TOPICS_TABLE . ' t, ' . FORUMS_TABLE . ' f
-						WHERE p.post_id = ' . (int) $this->post_id . ' AND p.topic_id = t.topic_id';	
-				$result = $db->sql_query($sql);
-				$row = $db->sql_fetchrow($result);
-				$db->sql_freeresult($result);
-				
-				// HTML, BBCode, Smilies, Images and Flash status
-				$bbcode_status	= ($config['allow_bbcode'] && ($auth->acl_get('f_bbcode', $row['forum_id']) || $row['forum_id'] == 0)) ? true : false;
-				$smilies_status	= ($bbcode_status && $config['allow_smilies'] && $auth->acl_get('f_smilies', $row['forum_id'])) ? true : false;
-				$img_status		= ($bbcode_status && $auth->acl_get('f_img', $row['forum_id'])) ? true : false;
-				$url_status		= ($config['allow_post_links']) ? true : false;
-				$flash_status	= ($bbcode_status && $auth->acl_get('f_flash', $row['forum_id']) && $config['allow_post_flash']) ? true : false;
-				$quote_status	= ($auth->acl_get('f_reply', $row['forum_id'])) ? true : false;
-				
-				// check if the user is registered and if he is able to edit posts
-				if (!$user->data['is_registered'] && !$auth->acl_gets('f_edit', 'm_edit', $row['forum_id']))
-				{
-					$this->error[] = array('error' => $user->lang['USER_CANNOT_EDIT'], 'action' => 'cancel');
-				}
-				
-				if ($row['forum_status'] === ITEM_LOCKED)
-				{
-					// forum locked
-					$this->error[] = array('error' => $user->lang['FORUM_LOCKED'], 'action' => 'cancel');
-				}
-				elseif ((isset($row['topic_status']) && $row['topic_status'] === ITEM_LOCKED) && !$auth->acl_get('m_edit', $row['forum_id']))
-				{
-					// topic locked
-					$this->error[] = array('error' => $user->lang['TOPIC_LOCKED'], 'action' => 'cancel');
-				}
-				
-				// check if the user is allowed to edit the selected post
-				if (!$auth->acl_get('m_edit', $row['forum_id']))
-				{
-					if ($user->data['user_id'] != $row['poster_id'])
-					{
-						// user is not allowed to edit this post
-						$this->error[] = array('error' => $user->lang['USER_CANNOT_EDIT'], 'action' => 'cancel');
-					}
-				
-					if (($row['post_time'] < time() - ($config['edit_time'] * 60)) && $config['edit_time'] > 0)
-					{
-						// user can no longer edit the post (exceeded edit time)
-						$this->error[] = array('error' => $user->lang['CANNOT_EDIT_TIME'], 'action' => 'cancel');
-					}
-				
-					if ($row['post_edit_locked'])
-					{
-						// post has been locked in order to prevent editing
-						$this->error[] = array('error' => $user->lang['CANNOT_EDIT_POST_LOCKED'], 'action' => 'cancel');
-					}
-				}
-				
-				/* 
-				* now fetch and normalize the post text
-				* we don't need to run generate_text_for_edit again, since we already did this once with the post text(at least if nobody tries to hack this script)
-				*/
-				$post_text = utf8_normalize_nfc(request_var('contents', '', true));	
-				
-				// this is just for the attachment_data
-				$message_parser = new parse_message();
-				
-				$message_parser->message = $post_text;
-				
-				// Always check if the submitted attachment data is valid and belongs to the user.
-				// Further down (especially in submit_post()) we do not check this again.
-				$message_parser->get_submitted_attachment_data($row['poster_id']);
-
-				if ($row['post_attachment'])
-				{
-					// Do not change to SELECT *
-					$sql = 'SELECT attach_id, is_orphan, attach_comment, real_filename
-						FROM ' . ATTACHMENTS_TABLE . '
-						WHERE post_msg_id = ' . (int)$post_id . '
-							AND in_message = 0
-							AND is_orphan = 0
-						ORDER BY filetime DESC';
-					$result = $db->sql_query($sql);
-					$message_parser->attachment_data = array_merge($message_parser->attachment_data, $db->sql_fetchrowset($result));
-					$db->sql_freeresult($result);
-				}
-
-				// Give a valid forum_id for image, smilies, etc. status
-				if(!isset($row['forum_id']) || $row['forum_id'] <= 0)
-				{
-					$forum_id = $this->forum_id;
-				}
-				else
-				{
-					$forum_id = $row['forum_id'];
-				}
-				
-				// Why should we waste any time if we already have an error?
-				if(!sizeof($this->error))
-				{
-					global $phpbb_root_path, $phpEx;
-					
-					$s_hidden_fields = '<input type="hidden" name="lastclick" value="' . time() . '" />';
-					$s_hidden_fields .= build_hidden_fields(array(
-						'edit_post_message_checksum'	=> $row['post_checksum'],
-						'edit_post_subject_checksum'	=> (isset($post_data['post_subject'])) ? md5($row['post_subject']) : '',
-						'message'						=> $post_text,
-						'full_editor' 					=> true,
-						'subject'						=> $row['post_subject'],
-						'attachment_data' 				=> $message_parser->attachment_data,
-					));
-					
-					$template->assign_vars(array(
-						'U_ADVANCED_EDIT' 	=> append_sid("{$phpbb_root_path}posting.$phpEx", 'mode=edit&amp;f=' . $forum_id . "&amp;t={$row['topic_id']}&amp;p={$row['post_id']}"),
-						'S_HIDDEN_FIELDS' 	=> $s_hidden_fields,
-					));
-				}
-				
-				// Build custom bbcodes array
-				display_custom_bbcodes();
-				
-				// Assign important template vars
-				$template->assign_vars(array(
-					'POST_TEXT'   			=> (!empty($this->error)) ? '' : $post_text, // Don't show the text if there was a permission error
-					'S_LINKS_ALLOWED'       => $url_status,
-					'S_BBCODE_IMG'          => $img_status,
-					'S_BBCODE_FLASH'		=> $flash_status,
-					'S_BBCODE_QUOTE'		=> $quote_status,
-					'S_BBCODE_ALLOWED'		=> $bbcode_status,
-					'MAX_FONT_SIZE'			=> (int) $config['max_post_font_size'],
-				));
-				
-				$this->tpl_file = 'jquery_base/quickedit.html';
-				// @todo: we don't need to set this to true. take a look at quickreply
-				$this->load_tpl = true;
-			
 			break;
 			
 			default:

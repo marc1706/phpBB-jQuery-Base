@@ -59,7 +59,7 @@ pjb(document).ready(function(){
 		{
 			cur_location = pjb(location).attr('href');
 			data = 'mode=quickedit&qe_mode=init&post_id=' + post_id + '&location=' + location;
-			qe_do_ajax('open', data, false);
+			qe_do_ajax('open', data, true);
 			popup_open = true;
 			cur_post_id = post_id;
 		}
@@ -232,20 +232,8 @@ function bind_quickedit_buttons()
 
 // open edit window
 function open_edit(success)
-{
-	var is_error = false;
-
-	try
-	{
-	  var return_ary = JSON.parse(success);
-	  is_error = true;
-	}
-	catch(e)
-	{
-	  is_error = false;
-	}
-	
-	if(is_error)
+{	
+	if(success['ERROR'])
 	{
 		for(i = 0; i < return_ary['ERROR_COUNT']; i++)
 		{
@@ -254,11 +242,10 @@ function open_edit(success)
 	}
 	else
 	{
-		alert(cur_post_id);
 		pjb('#post' + cur_post_id + ' div.content').hide();
 		pjb('#post' + cur_post_id + ' div.notice').hide();
 		pjb('#post' + cur_post_id + ' dl.attachbox').hide();
-		pjb('#post' + cur_post_id).append(success);
+		pjb('#post' + cur_post_id).append(success['TPL_BODY']);
 		pjb('#pjB-qe-form').show('slow');
 		bind_quickedit_buttons();
 		quickedit_open = true;
