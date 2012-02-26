@@ -433,11 +433,8 @@ class phpbb_jquery_base
 				$template->set_filenames(array(
 						'body' =>'jquery_base/quickedit.html')
 					);
-				/*
-				* @todo: for phpBB 3.1.x:
-				* replace $template->assign_display with $template->get_rendered_template
-				* more info here: http://tracker.phpbb.com/browse/PHPBB3-10644
-				*/
+
+				// get parsed template
 				$tpl_content = $template->assign_display('body');
 				
 				$this->add_return(array(
@@ -1526,11 +1523,8 @@ class phpbb_jquery_base
 			$template->set_filenames(array(
 						'body' =>'jquery_base/quickreply.html')
 					);
-			/*
-			* @todo: for phpBB 3.1.x:
-			* replace $template->assign_display with $template->get_rendered_template
-			* more info here: http://tracker.phpbb.com/browse/PHPBB3-10644
-			*/
+
+			// get parsed template
 			$tpl_content = $template->assign_display('body');
 			
 			$this->add_return(array(
@@ -1554,7 +1548,6 @@ class phpbb_jquery_base
 		
 		$forum_ids = array();
 
-		// @todo: add "NO_ACCESS" error message when someone tries to do this and is not registered
 		if($user->data['is_registered'] || $config['load_anon_lastread'])
 		{
 			switch($type)
@@ -1707,6 +1700,11 @@ class phpbb_jquery_base
 			$this->add_return(array(
 				'MARK_REDIRECT'	=> reapply_sid($redirect_url),
 			));
+		}
+		else
+		{
+			// user is not registered, so he shouldn't even be able to access this
+			$this->error[] = array('error' => 'NO_ACCESS', 'action' => 'cancel');
 		}
 	}
 	
