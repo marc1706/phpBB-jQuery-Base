@@ -1715,7 +1715,7 @@ class phpbb_jquery_base
 	*/
 	private function login()
 	{
-		global $user, $auth;
+		global $user, $auth, $config;
 		
 		$err = '';
 		
@@ -1750,6 +1750,7 @@ class phpbb_jquery_base
 			$username	= request_var('username', '', true);
 			$autologin	= (!empty($_POST['autologin'])) ? true : false;
 			$viewonline = (!empty($_POST['viewonline'])) ? 0 : 1;
+			$err = '';
 			
 			// try logging in
 			$result = $auth->login($username, $password, $autologin, $viewonline, false);
@@ -1774,7 +1775,17 @@ class phpbb_jquery_base
 			}
 			else
 			{
-				$this->error[] = array('error' => $result['error_msg'], 'action' => 'cancel');
+				// Assign admin contact to some error messages
+				if ($result['error_msg'] == 'LOGIN_ERROR_USERNAME' || $result['error_msg'] == 'LOGIN_ERROR_PASSWORD')
+				{
+					$err = (!$config['board_contact']) ? sprintf($user->lang[$result['error_msg']], '', '') : sprintf($user->lang[$result['error_msg']], '<a href="mailto:' . htmlspecialchars($config['board_contact']) . '">', '</a>');
+				}
+				else
+				{
+					$err = $result['error_msg'];
+				}
+
+				$this->error[] = array('error' => $err, 'action' => 'cancel');
 			}
 		}
 		else

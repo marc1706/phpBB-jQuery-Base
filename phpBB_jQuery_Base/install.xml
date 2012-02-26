@@ -60,7 +60,10 @@
 				<find><![CDATA['U_PRIVATEMSGS'			=> append_sid("{$phpbb_root_path}ucp.$phpEx", 'i=pm&amp;folder=inbox'),]]></find>
 				<action type="before-add"><![CDATA[		'U_JQUERY_BASE'				=> append_sid("{$phpbb_root_path}jquery_base.$phpEx"),
 	'QUICKEDIT_IMG'		=> $user->img('icon_post_quickedit', 'QUICKEDIT_POST'),
-	'U_QUICKEDIT' 			=> append_sid("{$phpbb_root_path}quickedit.$phpEx"),]]></action>
+	'U_QUICKEDIT' 		=> (isset($config['pjb_quickedit_enable']) && $config['pjb_quickedit_enable'] && $auth->acl_get('u_quickedit')) ? append_sid("{$phpbb_root_path}quickedit.$phpEx") : '',
+	'PJB_QUICKEDIT_ENABLE' 	=> (isset($config['pjb_quickedit_enable']) && $config['pjb_quickedit_enable'] && $auth->acl_get('u_quickedit')) ? true : false,
+	'PJB_QUICKREPLY_ENABLE' => (isset($config['pjb_quickreply_enable']) && $config['pjb_quickreply_enable'] && $auth->acl_get('u_quickreply')) ? true : false,
+	'PJB_POPUPS_ENABLE'	=> (isset($config['pjb_popups_enable']) && $config['pjb_popups_enable']) ? true : false,]]></action>
 			</edit>	
 		</open>
 		<open src="language/en/acp/styles.php">
@@ -71,7 +74,7 @@
 		</open>
 		<open src="language/en/common.php">
 			<edit>
-				<find><![CDATA[  'YOU_NO_NEW_PM'    => 'No new private messages are waiting for you.',]]></find>
+				<find><![CDATA[	'YOU_NO_NEW_PM'		=> 'No new private messages are waiting for you.',]]></find>
 				<action type="after-add"><![CDATA[	'acl_u_quickreply'	=> array('lang' => 'Can use the jQuery-based Quickreply', 'cat' => 'misc'),
 	'acl_u_quickedit'	=> array('lang' => 'Can use the jQuery-based Quickedit', 'cat' => 'misc'),]]></action>
 			</edit>

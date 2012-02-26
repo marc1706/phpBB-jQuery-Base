@@ -20,6 +20,7 @@ var edited_by_div = '#post\%d div.notice';
 var popup_open = false;
 var cur_post_id = 0;
 var login_instance;
+var login_open = false;
 var new_pm_count = 0;
 
 var logged_in = '{S_USER_LOGGED_IN}';
@@ -36,6 +37,7 @@ var pjb = jQuery.noConflict();
 */
 
 pjb(document).ready(function(){
+	<!-- IF PJB_QUICKEDIT_ENABLE -->
 	// quickedit
 	pjb('.qe-icon a').click(function() {
 		post_id = pjb(this).attr('id');
@@ -51,6 +53,7 @@ pjb(document).ready(function(){
 			cur_post_id = post_id;
 		}
 	});
+	<!-- ENDIF -->
 	
 	// mark forums read
 	pjb('li.rightside a.markread').click(function() {
@@ -73,7 +76,7 @@ pjb(document).ready(function(){
 			return false;
 		}
 	});
-	
+	<!-- IF PJB_QUICKREPLY_ENABLE -->
 	// Quickreply
 	pjb('#qr_editor_div .button1').click(function(event) {
 		if(popup_open != true)
@@ -95,6 +98,7 @@ pjb(document).ready(function(){
 			pjB_do_ajax('quickreply', data, true);
 		}
 	});
+	<!-- ENDIF -->
 	
 	// Quick Login
 	pjb('.icon-logout a').click(function(event) {
@@ -197,8 +201,23 @@ function bind_quickedit_buttons()
 		login_instance.close();
 		
 		var data = 'mode=login&' + user + '&' + password + '&location=' + location;
+		login_open = false;
 		pjB_do_ajax('login', data, true);
 	});
+
+	// submit login "form" on hitting enter
+        var complete_body = pjb('body');
+        complete_body.keypress(function(e)
+        {
+		var code = null;
+		code = (e.keyCode ? e.keyCode : e.which);
+		if (code == 13 && login_open)
+		{
+			pjb('#pjb-login input.button1').click();
+			e.preventDefault(); // don't care, just don't submit forms ...
+		}
+        });
+
 }
 
 // open edit window
@@ -247,7 +266,9 @@ function submit_edit(data)
 		pjb('#post' + cur_post_id + ' div.content').show('slow');
 		pjb('#post' + cur_post_id + ' dl.attachbox').show('slow');
 		pjb('#post' + cur_post_id + ' div.notice').show('slow');
+		<!-- IF PJB_POPUPS_ENABLE -->
 		pjB_output_info(data['SUCCESS_TITLE'], data['SUCCESS_MESSAGE'], true);
+		<!-- ENDIF -->
 		
 		quickedit_open = false;
 		popup_open = false;
@@ -271,7 +292,9 @@ function mark_read(success)
 {
 	if(success['MARK_REDIRECT'])
 	{
+		<!-- IF PJB_POPUPS_ENABLE -->
 		pjB_output_info(success['SUCCESS_TITLE'], success['SUCCESS_MESSAGE'], true);
+		<!-- ENDIF -->
 		setTimeout (
 			'location.reload()', 
 			3000 // 3 seconds until page reload
@@ -294,9 +317,9 @@ function quickreply(success)
 {
 	if(success['ERROR_COUNT'])
 	{
-		for(i = 0; i < return_ary['ERROR_COUNT']; i++)
+		for(i = 0; i < success['ERROR_COUNT']; i++)
 		{
-			pjB_output_info('', return_ary['ERROR'][i], true);
+			pjB_output_info('', success['ERROR'][i], true);
 		}
 	}
 	else
@@ -342,7 +365,9 @@ function quickreply(success)
 			pjb('#' + cur_id).fadeIn('slow');
 			
 			// @todo: add ACP option for all those spam ... I mean popup messages
-			pjB_output_info(success['SUCCESS_TITLE'], success['SUCCESS_MESSAGE'], true)
+			<!-- IF PJB_POPUPS_ENABLE -->
+			pjB_output_info(success['SUCCESS_TITLE'], success['SUCCESS_MESSAGE'], true);
+			<!-- ENDIF -->
 		}
 	}
 }
@@ -357,7 +382,7 @@ function pjB_login(data)
 	{
 		for(i = 0; i < data['ERROR_COUNT']; i++)
 		{
-			pjB_output_info('', return_ary['ERROR'][i], true);
+			pjB_output_info('', data['ERROR'][i], false);
 		}
 	}
 	else
@@ -385,6 +410,8 @@ function pjB_login_template(data)
 	},{
 		expires: false
 	});
+	
+	login_open = true;
 	
 	bind_quickedit_buttons();
 }

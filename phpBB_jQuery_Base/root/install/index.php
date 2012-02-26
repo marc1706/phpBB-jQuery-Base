@@ -55,7 +55,7 @@ $language_file = 'mods/info_acp_jquery_base';
 * The version numbering must otherwise be compatible with the version_compare function - http://php.net/manual/en/function.version-compare.php
 */
 $versions = array(
-	'0.0.2' => array(
+	'0.1.0' => array(
 
 		'permission_add' => array(
 			array('u_quickedit', 1),
@@ -77,6 +77,7 @@ $versions = array(
 			array('pjb_quickedit_enable', '1', 0),
 			array('pjb_markread_enable', '1', 0),
 			array('pjb_login_enable', '1', 0),
+			array('pjb_popups_enable', '0', 0),
 		),
 		
 		'module_add' => array(

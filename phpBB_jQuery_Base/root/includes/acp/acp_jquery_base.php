@@ -47,6 +47,7 @@ class acp_jquery_base
 						'pjb_quickedit_enable'				=> array('lang' => 'ACP_JQUERY_QUICKEDIT_ENABLE', 'validate' => 'bool', 'type' => 'radio:yes_no', 'explain' => false),
 						'pjb_markread_enable'				=> array('lang' => 'ACP_JQUERY_MARKREAD_ENABLE', 'validate' => 'bool', 'type' => 'radio:yes_no', 'explain' => false),
 						'pjb_login_enable'					=> array('lang' => 'ACP_JQUERY_LOGIN_ENABLE', 'validate' => 'bool', 'type' => 'radio:yes_no', 'explain' => false),
+						'pjb_popups_enable'				=> array('lang' => 'ACP_JQUERY_POPUP_ENABLE', 'validate' => 'bool', 'type' => 'radio:yes_no', 'explain' => true),
 					)
 				);
 			break;
@@ -142,7 +143,7 @@ class acp_jquery_base
 			}
 			else if ($vars['explain'])
 			{
-				$l_explain = (isset($user->lang[$vars['lang'] . '_EXPLAIN'])) ? $user->lang[$vars['lang'] . '_EXPLAIN'] : '';
+				$l_explain = (isset($user->lang[$vars['lang'] . '_EXP'])) ? $user->lang[$vars['lang'] . '_EXP'] : '';
 			}
 
 			$template->assign_block_vars('options', array(
