@@ -1720,6 +1720,26 @@ class phpbb_jquery_base
 		$err = '';
 		
 		$user->add_lang('ucp');
+
+		$get_template = request_var('get_template', 0);
+
+		if($get_template)
+		{
+			global $template;
+
+			$template->set_filenames(array(
+						'body' =>'jquery_base/login.html')
+					);
+
+			// get parsed template
+			$tpl_content = $template->assign_display('body');
+
+			$this->add_return(array(
+				'TPL_BODY'				=> $tpl_content,
+			));
+
+			return;
+		}
 		
 		// only try to login if we aren't logged in yet
 		if ($user->data['user_id'] == ANONYMOUS)

@@ -22,19 +22,6 @@ var cur_post_id = 0;
 var login_instance;
 var new_pm_count = 0;
 
-/**
-* HTML code for login body
-*/
-var login_body = 
-message = '<div id="pjb-login">' + 
-'<span class="genmed">{L_USERNAME}:</span><br />' + 
-'<input type="text" tabindex="1" name="username" id="username" value="" class="inputbox autowidth" /><br /><br />' + 
-'<span class="genmed">{L_PASSWORD}:</span><br />' + 
-'<input type="password" tabindex="2" id="password" name="password" class="inputbox autowidth" /><br /><br />' + 
-'<input type="checkbox" class="radio" name="autologin" tabindex="3" /> <span class="gensmall">{L_LOG_ME_IN}</span><br /><br />' + 
-'<a href="{U_REGISTER}">{L_REGISTER}</a><br /><br />' + 
-'<input type="submit" name="login" tabindex="5" value="{L_LOGIN}" class="button1" /></div>';
-
 var logged_in = '{S_USER_LOGGED_IN}';
 
 // Make sure we don't get issues with other MODs or libraries
@@ -113,22 +100,8 @@ pjb(document).ready(function(){
 	pjb('.icon-logout a').click(function(event) {
 		<!-- IF not S_USER_LOGGED_IN -->
 			event.preventDefault();
-			var data = 'mode=login';
-			
-			/** 
-			* create HTML for login box
-			* nobody said this would look nice ...
-			*/
-			message = login_body;
-			
-			login_instance = pjb("#container").notify("create", {
-				title: "{L_LOGIN_LOGOUT}",
-				text: message
-			},{
-				expires: false
-			});
-			
-			bind_quickedit_buttons();
+			var data = 'mode=login&get_template=1';
+			pjB_do_ajax('login_template', data, true);
 		<!-- ENDIF -->
 	});
 	
@@ -395,6 +368,25 @@ function pjB_login(data)
 }
 
 /**
+* get template for login
+*
+* @param (json) data
+*/
+function pjB_login_template(data)
+{
+	message = data['TPL_BODY'];
+	
+	login_instance = pjb("#container").notify("create", {
+		title: "{L_LOGIN_LOGOUT}",
+		text: message
+	},{
+		expires: false
+	});
+	
+	bind_quickedit_buttons();
+}
+
+/**
 * check for new PMs
 * if there are any update new PM message, if needed
 *
@@ -482,6 +474,9 @@ function pjB_do_ajax(mode, data, use_json)
 				break;
 				case 'login':
 					pjB_login(data);
+				break;
+				case 'login_template':
+					pjB_login_template(data)
 				break;
 				case 'check_pm':
 					pjB_check_pm(data);
