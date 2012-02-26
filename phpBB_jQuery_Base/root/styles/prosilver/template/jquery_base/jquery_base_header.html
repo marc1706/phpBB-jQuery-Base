@@ -279,7 +279,10 @@ function mark_read(success)
 	}
 	else
 	{
-		// @todo: error message
+		for(i = 0; i < return_ary['ERROR_COUNT']; i++)
+		{
+			pjB_output_info('', return_ary['ERROR'][i], true);
+		}
 	}
 }
 
