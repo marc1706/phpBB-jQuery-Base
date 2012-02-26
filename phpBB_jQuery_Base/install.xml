@@ -15,7 +15,7 @@
 				<email><![CDATA[admin@m-a-styles.de]]></email>
 			</author>
 		</author-group>
-		<mod-version>0.0.2</mod-version>
+		<mod-version>0.1.0</mod-version>
 		<installation>
 			<level>easy</level>
 			<time>300</time>
@@ -30,6 +30,16 @@
 		</link-group>
 		-->
 		<history>
+			<entry>
+				<date>2012-02-26</date>
+				<rev-version>0.1.0</rev-version>
+				<changelog lang="en">
+					<change>First beta - changelog: https://github.com/marc1706/phpBB-jQuery-Base/commits/master</change>
+				</changelog>
+				<changelog lang="de">
+					<change>Erste Beta - Changelog: https://github.com/marc1706/phpBB-jQuery-Base/commits/master</change>
+				</changelog>
+			</entry>
 			<entry>
 				<date>2010-08-23</date>
 				<rev-version>0.0.1</rev-version>
