@@ -7,6 +7,7 @@
 		<license><![CDATA[http://opensource.org/licenses/gpl-license.php GNU General Public License v2]]></license>
 		<title lang="en"><![CDATA[phpBB jQuery Base]]></title>
 		<description lang="en"><![CDATA[This will add a jQuery Back-End to your forum, enabling you to use jQuery for several features of your forum.]]></description>
+		<author-notes lang="en">This MOD requires PHP5.</author-notes>
 		<author-group>
 			<author>
 				<realname><![CDATA[Marc Alexander]]></realname>
@@ -92,7 +93,9 @@
 		<open src="includes/functions.php">
 			<edit>
 				<find><![CDATA['U_PRIVATEMSGS'			=> append_sid("{$phpbb_root_path}ucp.$phpEx", 'i=pm&amp;folder=inbox'),]]></find>
-				<action type="before-add"><![CDATA[	'U_JQUERY_BASE'				=> (isset($config['pjb_enable']) && $config['pjb_enable']) ? append_sid("{$phpbb_root_path}jquery_base.$phpEx") : false,
+				<action type="before-add"><![CDATA[
+	// phpBB jQuery Base -- Start
+	'U_JQUERY_BASE'				=> (isset($config['pjb_enable']) && $config['pjb_enable']) ? append_sid("{$phpbb_root_path}jquery_base.$phpEx") : false,
 	'QUICKEDIT_IMG'		=> $user->img('icon_post_quickedit', 'QUICKEDIT_POST'),
 	'U_QUICKEDIT' 		=> (isset($config['pjb_quickedit_enable']) && $config['pjb_quickedit_enable'] && $auth->acl_get('u_quickedit') && $config['pjb_enable']) ? append_sid("{$phpbb_root_path}quickedit.$phpEx") : '',
 	'PJB_QUICKEDIT_ENABLE' 	=> (isset($config['pjb_quickedit_enable']) && $config['pjb_quickedit_enable'] && $auth->acl_get('u_quickedit') && $config['pjb_enable']) ? true : false,
@@ -100,7 +103,8 @@
 	'PJB_POPUPS_ENABLE'	=> (isset($config['pjb_popups_enable']) && $config['pjb_popups_enable'] && $config['pjb_enable']) ? true : false,
 	'PJB_PM_UPDATE_INTERVAL' => (isset($config['pjb_pm_update_interval']) && !empty($config['pjb_pm_update_interval']) && $config['pjb_enable']) ? $config['pjb_pm_update_interval'] : false,
 	'PJB_MARK_READ_ENABLE'	=> (isset($config['pjb_markread_enable']) && $config['pjb_markread_enable'] && $config['pjb_enable']) ? true : false,
-	'PJB_LOGIN_ENABLE'		=> (isset($config['pjb_login_enable']) && $config['pjb_login_enable'] && $config['pjb_enable']) ? true : false,]]></action>
+	'PJB_LOGIN_ENABLE'		=> (isset($config['pjb_login_enable']) && $config['pjb_login_enable'] && $config['pjb_enable']) ? true : false,
+	// phpBB jQuery Base -- End]]></action>
 			</edit>	
 		</open>
 		<open src="language/en/acp/styles.php">
@@ -140,10 +144,6 @@
 		</open>
 		<open src="styles/prosilver/template/overall_header.html">
 			<edit>
-				<remove><![CDATA[	<!-- IF S_USER_PM_POPUP and S_NEW_PM -->
-		var url = '{UA_POPUP_PM}';
-		window.open(url.replace(/&amp;/g, '&'), '_phpbbprivmsg', 'height=225,resizable=yes,scrollbars=yes, width=400');
-	<!-- ENDIF -->]]></remove>
 				<find><![CDATA[	<!-- IF S_USER_PM_POPUP and S_NEW_PM -->]]></find>
 				<inline-edit>
 					<inline-find><![CDATA[S_NEW_PM]]></inline-find>
@@ -175,7 +175,7 @@
 			</edit>
 			<edit>
 				<find><![CDATA[					<!-- IF postrow.U_EDIT --><li class="edit-icon"><a href="{postrow.U_EDIT}" title="{L_EDIT_POST}"><span>{L_EDIT_POST}</span></a></li><!-- ENDIF -->]]></find>
-				<action type="before-add"><![CDATA[					<!-- IF postrow.U_EDIT && U_QUICKEDIT--><li class="qe-icon"><a href="#" onclick="return false;" id="quickedit{postrow.POST_ID}" title="{L_QUICKEDIT_POST}"><span>{L_QUICKEDIT_POST}</span></a></li><!-- ENDIF -->]]></action>
+				<action type="before-add"><![CDATA[					<!-- IF postrow.U_EDIT and U_QUICKEDIT --><li class="qe-icon"><a href="#" onclick="return false;" id="quickedit{postrow.POST_ID}" title="{L_QUICKEDIT_POST}"><span>{L_QUICKEDIT_POST}</span></a></li><!-- ENDIF -->]]></action>
 			</edit>
 			<edit>
 				<find><![CDATA[<!-- END postrow -->]]></find>
