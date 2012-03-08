@@ -660,7 +660,9 @@ function qe_insert_text(text, spaces, popup)
 		text = ' ' + text + ' ';
 	}
 	
-	if (!isNaN(textarea.selectionStart))
+	// Since IE9, IE also has textarea.selectionStart, but it still needs to be treated the old way.
+	// Therefore we simply add a !is_ie here until IE fixes the text-selection completely.
+	if (!isNaN(textarea.selectionStart) && !is_ie)
 	{
 		var sel_start = textarea.selectionStart;
 		var sel_end = textarea.selectionEnd;
@@ -695,7 +697,7 @@ function qe_insert_text(text, spaces, popup)
 */
 function qe_mozWrap(txtarea, open, close)
 {
-	var selLength = txtarea.textLength;
+	var selLength = (typeof(txtarea.textLength) == 'undefined') ? txtarea.value.length : txtarea.textLength;
 	var selStart = txtarea.selectionStart;
 	var selEnd = txtarea.selectionEnd;
 	var scrollTop = txtarea.scrollTop;
@@ -710,8 +712,8 @@ function qe_mozWrap(txtarea, open, close)
 	var s3 = (txtarea.value).substring(selEnd, selLength);
 
 	txtarea.value = s1 + open + s2 + close + s3;
-	txtarea.selectionStart = selEnd + open.length + close.length;
-	txtarea.selectionEnd = txtarea.selectionStart;
+	txtarea.selectionStart = selStart + open.length;
+	txtarea.selectionEnd = selEnd + open.length;
 	txtarea.focus();
 	txtarea.scrollTop = scrollTop;
 
