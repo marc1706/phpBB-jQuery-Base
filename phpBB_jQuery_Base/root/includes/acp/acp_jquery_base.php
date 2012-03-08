@@ -22,8 +22,6 @@ class acp_jquery_base
 		global $db, $user, $template;
 		global $config, $phpbb_root_path, $phpbb_admin_path, $phpEx;
 
-		//$user->add_lang('mods/jquery_acp');
-
 		$action = request_var('action', '');
 		$submit = (isset($_POST['submit'])) ? true : false;
 		
@@ -47,7 +45,8 @@ class acp_jquery_base
 						'pjb_quickedit_enable'				=> array('lang' => 'ACP_JQUERY_QUICKEDIT_ENABLE', 'validate' => 'bool', 'type' => 'radio:yes_no', 'explain' => false),
 						'pjb_markread_enable'				=> array('lang' => 'ACP_JQUERY_MARKREAD_ENABLE', 'validate' => 'bool', 'type' => 'radio:yes_no', 'explain' => false),
 						'pjb_login_enable'					=> array('lang' => 'ACP_JQUERY_LOGIN_ENABLE', 'validate' => 'bool', 'type' => 'radio:yes_no', 'explain' => false),
-						'pjb_popups_enable'				=> array('lang' => 'ACP_JQUERY_POPUP_ENABLE', 'validate' => 'bool', 'type' => 'radio:yes_no', 'explain' => true),
+						'pjb_popups_enable'					=> array('lang' => 'ACP_JQUERY_POPUP_ENABLE', 'validate' => 'bool', 'type' => 'radio:yes_no', 'explain' => true),
+						'pjb_pm_update_interval'			=> array('lang' => 'ACP_JQUERY_UPDATE_INTERVAL', 'validate' => 'int', 'type' => 'text:3:3', 'explain' => true),
 					)
 				);
 			break;

@@ -38,14 +38,14 @@ $lang = array_merge($lang, array(
 	'ACP_JQUERY_BASE_INFO_EXP'			=> 'You can manage your phpBB jQuery Base here.',
 	'ACP_JQUERY_GENERAL_INFO'			=> 'General settings',
 	'ACP_JQUERY_BASE_ENABLE'			=> 'Enable phpBB jQuery Base',
-	'ACP_JQUERY_QUICKREPLY_ENABLE'			=> 'Enable Quickreply',
-	'ACP_JQUERY_QUICKEDIT_ENABLE'			=> 'Enable Quickedit',
-	'ACP_JQUERY_MARKREAD_ENABLE'			=> 'Enable marking topics & forums read',
+	'ACP_JQUERY_QUICKREPLY_ENABLE'		=> 'Enable Quickreply',
+	'ACP_JQUERY_QUICKEDIT_ENABLE'		=> 'Enable Quickedit',
+	'ACP_JQUERY_MARKREAD_ENABLE'		=> 'Enable marking topics & forums read',
 	'ACP_JQUERY_LOGIN_ENABLE'			=> 'Enable login & logout using jQuery',
 	'ACP_JQUERY_POPUP_ENABLE'			=> 'Enable popup "success" messages',
-	'ACP_JQUERY_POPUP_ENABLE_EXP'			=> 'This will show popup messages after you have run any action, i.e. after a quickreply you will see a popup message stating that your quickreply was successful.',
-	
-	
+	'ACP_JQUERY_POPUP_ENABLE_EXP'		=> 'This will show popup messages after you have run any action, i.e. after a quickreply you will see a popup message stating that your quickreply was successful.',
+	'ACP_JQUERY_UPDATE_INTERVAL'		=> 'Update interval for checking new PMs',
+	'ACP_JQUERY_UPDATE_INTERVAL_EXP'	=> 'Define the time in minutes after which the PM check should check for new PMs. Setting this to 0 will disable this feature.',
 	
 	// Logs
 	'LOG_JQUERY_BASE_CONFIG'			=> '<strong>Altered phpBB jQuery Base settings</strong><br />&raquo; %s',

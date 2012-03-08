@@ -124,13 +124,15 @@ pjb(document).ready(function(){
 	}
 	<!-- ENDIF -->
 	
+	<!-- IF PJB_PM_UPDATE_INTERVAL -->
 	/* 
-	* check for new PMs every 2 minutes
-	* @todo: change this to an ACP setting
+	* check for new PMs every X minutes
+	* X = {PJB_PM_UPDATE_INTERVAL}
 	*/
 	setInterval(function() {
 		pjB_do_ajax('check_pm', 'mode=check_pm', true);
-	}, 1000 * 60 * 2); // 1000 ms * 60 = 60 s * 2 = 2 minutes
+	}, 1000 * 60 * {PJB_PM_UPDATE_INTERVAL}); // 1000 ms * 60 = 60 s * X = X minutes
+	<!-- ENDIF -->
 
 });
 

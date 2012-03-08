@@ -94,6 +94,10 @@ $versions = array(
 	),
 	
 	'1.0.0' => array(
+		'config_add' => array(
+			array('pjb_pm_update_interval', 2, 0), // default to 2 minutes
+		),
+	
 		'cache_purge' => array(
 			'imageset',
 			'template',

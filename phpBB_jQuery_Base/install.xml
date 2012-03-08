@@ -68,12 +68,13 @@
 		<open src="includes/functions.php">
 			<edit>
 				<find><![CDATA['U_PRIVATEMSGS'			=> append_sid("{$phpbb_root_path}ucp.$phpEx", 'i=pm&amp;folder=inbox'),]]></find>
-				<action type="before-add"><![CDATA[		'U_JQUERY_BASE'				=> append_sid("{$phpbb_root_path}jquery_base.$phpEx"),
+				<action type="before-add"><![CDATA[	'U_JQUERY_BASE'				=> append_sid("{$phpbb_root_path}jquery_base.$phpEx"),
 	'QUICKEDIT_IMG'		=> $user->img('icon_post_quickedit', 'QUICKEDIT_POST'),
 	'U_QUICKEDIT' 		=> (isset($config['pjb_quickedit_enable']) && $config['pjb_quickedit_enable'] && $auth->acl_get('u_quickedit')) ? append_sid("{$phpbb_root_path}quickedit.$phpEx") : '',
 	'PJB_QUICKEDIT_ENABLE' 	=> (isset($config['pjb_quickedit_enable']) && $config['pjb_quickedit_enable'] && $auth->acl_get('u_quickedit')) ? true : false,
 	'PJB_QUICKREPLY_ENABLE' => (isset($config['pjb_quickreply_enable']) && $config['pjb_quickreply_enable'] && $auth->acl_get('u_quickreply')) ? true : false,
-	'PJB_POPUPS_ENABLE'	=> (isset($config['pjb_popups_enable']) && $config['pjb_popups_enable']) ? true : false,]]></action>
+	'PJB_POPUPS_ENABLE'	=> (isset($config['pjb_popups_enable']) && $config['pjb_popups_enable']) ? true : false,
+	'PJB_PM_UPDATE_INTERVAL' => (isset($config['pjb_pm_update_interval']) && !empty($config['pjb_pm_update_interval'])) ? $config['pjb_pm_update_interval'] : false,]]></action>
 			</edit>	
 		</open>
 		<open src="language/en/acp/styles.php">
