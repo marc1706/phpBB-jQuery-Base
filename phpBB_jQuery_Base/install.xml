@@ -99,7 +99,8 @@
 	'PJB_QUICKREPLY_ENABLE' => (isset($config['pjb_quickreply_enable']) && $config['pjb_quickreply_enable'] && $auth->acl_get('u_quickreply') && $config['pjb_enable']) ? true : false,
 	'PJB_POPUPS_ENABLE'	=> (isset($config['pjb_popups_enable']) && $config['pjb_popups_enable'] && $config['pjb_enable']) ? true : false,
 	'PJB_PM_UPDATE_INTERVAL' => (isset($config['pjb_pm_update_interval']) && !empty($config['pjb_pm_update_interval']) && $config['pjb_enable']) ? $config['pjb_pm_update_interval'] : false,
-	'PJB_MARK_READ_ENABLE'	=> (isset($config['pjb_markread_enable']) && $config['pjb_markread_enable'] && $config['pjb_enable']) ? true : false,]]></action>
+	'PJB_MARK_READ_ENABLE'	=> (isset($config['pjb_markread_enable']) && $config['pjb_markread_enable'] && $config['pjb_enable']) ? true : false,
+	'PJB_LOGIN_ENABLE'		=> (isset($config['pjb_login_enable']) && $config['pjb_login_enable'] && $config['pjb_enable']) ? true : false,]]></action>
 			</edit>	
 		</open>
 		<open src="language/en/acp/styles.php">
