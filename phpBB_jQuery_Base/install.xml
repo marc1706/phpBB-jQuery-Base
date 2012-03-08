@@ -118,6 +118,11 @@
 		var url = '{UA_POPUP_PM}';
 		window.open(url.replace(/&amp;/g, '&'), '_phpbbprivmsg', 'height=225,resizable=yes,scrollbars=yes, width=400');
 	<!-- ENDIF -->]]></remove>
+				<find><![CDATA[	<!-- IF S_USER_PM_POPUP and S_NEW_PM -->]]></find>
+				<inline-edit>
+					<inline-find><![CDATA[S_NEW_PM]]></inline-find>
+					<inline-action type="after-add"><![CDATA[ and not U_JQUERY_BASE]]></inline-action>
+				</inline-edit>
 			</edit>
 			<edit>
 				<find><![CDATA[</head>]]></find>
