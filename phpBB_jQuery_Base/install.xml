@@ -68,13 +68,13 @@
 		<open src="includes/functions.php">
 			<edit>
 				<find><![CDATA['U_PRIVATEMSGS'			=> append_sid("{$phpbb_root_path}ucp.$phpEx", 'i=pm&amp;folder=inbox'),]]></find>
-				<action type="before-add"><![CDATA[	'U_JQUERY_BASE'				=> append_sid("{$phpbb_root_path}jquery_base.$phpEx"),
+				<action type="before-add"><![CDATA[	'U_JQUERY_BASE'				=> (isset($config['pjb_enable']) && $config['pjb_enable']) ? append_sid("{$phpbb_root_path}jquery_base.$phpEx") : false,
 	'QUICKEDIT_IMG'		=> $user->img('icon_post_quickedit', 'QUICKEDIT_POST'),
-	'U_QUICKEDIT' 		=> (isset($config['pjb_quickedit_enable']) && $config['pjb_quickedit_enable'] && $auth->acl_get('u_quickedit')) ? append_sid("{$phpbb_root_path}quickedit.$phpEx") : '',
-	'PJB_QUICKEDIT_ENABLE' 	=> (isset($config['pjb_quickedit_enable']) && $config['pjb_quickedit_enable'] && $auth->acl_get('u_quickedit')) ? true : false,
-	'PJB_QUICKREPLY_ENABLE' => (isset($config['pjb_quickreply_enable']) && $config['pjb_quickreply_enable'] && $auth->acl_get('u_quickreply')) ? true : false,
-	'PJB_POPUPS_ENABLE'	=> (isset($config['pjb_popups_enable']) && $config['pjb_popups_enable']) ? true : false,
-	'PJB_PM_UPDATE_INTERVAL' => (isset($config['pjb_pm_update_interval']) && !empty($config['pjb_pm_update_interval'])) ? $config['pjb_pm_update_interval'] : false,]]></action>
+	'U_QUICKEDIT' 		=> (isset($config['pjb_quickedit_enable']) && $config['pjb_quickedit_enable'] && $auth->acl_get('u_quickedit') && $config['pjb_enable']) ? append_sid("{$phpbb_root_path}quickedit.$phpEx") : '',
+	'PJB_QUICKEDIT_ENABLE' 	=> (isset($config['pjb_quickedit_enable']) && $config['pjb_quickedit_enable'] && $auth->acl_get('u_quickedit') && $config['pjb_enable']) ? true : false,
+	'PJB_QUICKREPLY_ENABLE' => (isset($config['pjb_quickreply_enable']) && $config['pjb_quickreply_enable'] && $auth->acl_get('u_quickreply') && $config['pjb_enable']) ? true : false,
+	'PJB_POPUPS_ENABLE'	=> (isset($config['pjb_popups_enable']) && $config['pjb_popups_enable'] && $config['pjb_enable']) ? true : false,
+	'PJB_PM_UPDATE_INTERVAL' => (isset($config['pjb_pm_update_interval']) && !empty($config['pjb_pm_update_interval']) && $config['pjb_enable']) ? $config['pjb_pm_update_interval'] : false,]]></action>
 			</edit>	
 		</open>
 		<open src="language/en/acp/styles.php">
@@ -121,13 +121,17 @@
 			</edit>
 			<edit>
 				<find><![CDATA[</head>]]></find>
-				<action type="before-add"><![CDATA[<!-- INCLUDE jquery_base/jquery_base_header.html -->]]></action>
+				<action type="before-add"><![CDATA[<!-- IF U_JQUERY_BASE -->
+<!-- INCLUDE jquery_base/jquery_base_header.html -->
+<!-- ENDIF -->]]></action>
 			</edit>
 		</open>
 		<open src="styles/prosilver/template/overall_footer.html">
 			<edit>
 				<find><![CDATA[</body>]]></find>
-				<action type="before-add"><![CDATA[<!-- INCLUDE jquery_base/jquery_base_footer.html -->]]></action>
+				<action type="before-add"><![CDATA[<!-- IF U_JQUERY_BASE -->
+<!-- INCLUDE jquery_base/jquery_base_footer.html -->
+<!-- ENDIF -->]]></action>
 			</edit>
 		</open>
 		<open src="styles/prosilver/template/viewtopic_body.html">
@@ -140,7 +144,7 @@
 			</edit>
 			<edit>
 				<find><![CDATA[					<!-- IF postrow.U_EDIT --><li class="edit-icon"><a href="{postrow.U_EDIT}" title="{L_EDIT_POST}"><span>{L_EDIT_POST}</span></a></li><!-- ENDIF -->]]></find>
-				<action type="before-add"><![CDATA[					<!-- IF postrow.U_EDIT --><li class="qe-icon"><a href="#" onclick="return false;" id="quickedit{postrow.POST_ID}" title="{L_QUICKEDIT_POST}"><span>{L_QUICKEDIT_POST}</span></a></li><!-- ENDIF -->]]></action>
+				<action type="before-add"><![CDATA[					<!-- IF postrow.U_EDIT && U_QUICKEDIT--><li class="qe-icon"><a href="#" onclick="return false;" id="quickedit{postrow.POST_ID}" title="{L_QUICKEDIT_POST}"><span>{L_QUICKEDIT_POST}</span></a></li><!-- ENDIF -->]]></action>
 			</edit>
 			<edit>
 				<find><![CDATA[<!-- END postrow -->]]></find>
