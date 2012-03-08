@@ -226,9 +226,9 @@ function open_edit(success)
 {	
 	if(success['ERROR'])
 	{
-		for(i = 0; i < return_ary['ERROR_COUNT']; i++)
+		for(i = 0; i < success['ERROR_COUNT']; i++)
 		{
-			pjB_output_info('', return_ary['ERROR'][i], true);
+			pjB_output_info('', success['ERROR'][i], true);
 		}
 	}
 	else
@@ -303,9 +303,9 @@ function mark_read(success)
 	}
 	else
 	{
-		for(i = 0; i < return_ary['ERROR_COUNT']; i++)
+		for(i = 0; i < success['ERROR_COUNT']; i++)
 		{
-			pjB_output_info('', return_ary['ERROR'][i], true);
+			pjB_output_info('', success['ERROR'][i], true);
 		}
 	}
 }
