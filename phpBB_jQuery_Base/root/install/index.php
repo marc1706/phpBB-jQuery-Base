@@ -56,7 +56,6 @@ $language_file = 'mods/info_acp_jquery_base';
 */
 $versions = array(
 	'0.1.0' => array(
-
 		'permission_add' => array(
 			array('u_quickedit', 1),
 			array('u_quickreply', 1),
@@ -92,7 +91,15 @@ $versions = array(
 				),
 			),
 		),
-
+	),
+	
+	'1.0.0' => array(
+		'cache_purge' => array(
+			'imageset',
+			'template',
+			'theme',
+			'',
+		),
 	),
 );
 
