@@ -1829,13 +1829,6 @@ class phpbb_jquery_base
 				*/
 				if (!$user->data['user_last_privmsg'] || $user->data['user_last_privmsg'] > $user->data['session_last_visit'])
 				{
-					/* @todo: remove this ...
-					$sql = 'UPDATE ' . USERS_TABLE . '
-						SET user_last_privmsg = ' . $user->data['session_last_visit'] . '
-						WHERE user_id = ' . $user->data['user_id'];
-					$db->sql_query($sql);
-					*/
-
 					$s_privmsg_new = true;
 				}
 				else
@@ -1851,13 +1844,6 @@ class phpbb_jquery_base
 
 			$l_privmsgs_text_unread = '';
 
-			// looks useless to me since it never get's used in the PM Popup. Therefore: @todo: remove this ...
-			if ($user->data['user_unread_privmsg'] && $user->data['user_unread_privmsg'] != $user->data['user_new_privmsg'])
-			{
-				$l_message_unread = ($user->data['user_unread_privmsg'] == 1) ? $user->lang['UNREAD_PM'] : $user->lang['UNREAD_PMS'];
-				$l_privmsgs_text_unread = sprintf($l_message_unread, $user->data['user_unread_privmsg']);
-			}
-			//echo '<br />' . $l_privmsgs_text . '<br />' . $l_privmsgs_text_unread . '<br />' . $s_privmsg_new . '<br />';
 			$this->add_return(array(
 				'NEW_PM_COUNT'	=> $user->data['user_new_privmsg'],
 				'NEW_PM_MSG'	=> $l_privmsgs_text,
