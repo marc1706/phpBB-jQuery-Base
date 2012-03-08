@@ -126,8 +126,7 @@ pjb(document).ready(function(){
 	
 	<!-- IF PJB_PM_UPDATE_INTERVAL -->
 	/* 
-	* check for new PMs every X minutes
-	* X = {PJB_PM_UPDATE_INTERVAL}
+	* check for new PMs every {PJB_PM_UPDATE_INTERVAL} minutes
 	*/
 	setInterval(function() {
 		pjB_do_ajax('check_pm', 'mode=check_pm', true);
@@ -208,17 +207,17 @@ function bind_quickedit_buttons()
 	});
 
 	// submit login "form" on hitting enter
-        var complete_body = pjb('body');
-        complete_body.keypress(function(e)
-        {
+	var complete_body = pjb('body');
+	complete_body.keypress(function(e)
+	{
 		var code = null;
-		code = (e.keyCode ? e.keyCode : e.which);
+		code = (e.keyCode) ? e.keyCode : e.which;
 		if (code == 13 && login_open)
 		{
 			pjb('#pjb-login input.button1').click();
-			e.preventDefault(); // don't care, just don't submit forms ...
+			e.preventDefault(); // don't care, just don't submit any forms ...
 		}
-        });
+	});
 
 }
 
@@ -299,7 +298,7 @@ function mark_read(success)
 		<!-- ENDIF -->
 		setTimeout (
 			'location.reload()', 
-			3000 // 3 seconds until page reload
+			1000 // 1 second until page reload
 		);
 	}
 	else
@@ -332,7 +331,7 @@ function quickreply(success)
 			var redirect_url = success['SUCCESS_REDIRECT_URL'].replace(/&amp;/g, '&');
 			setTimeout (
 				'window.location="' + redirect_url + '";', 
-				1000 // 3 seconds until page reload
+				1000 // 1 second until page reload
 			);
 		}
 		else
@@ -366,7 +365,6 @@ function quickreply(success)
 			pjb('#qr_editor_div textarea.inputbox').val('');
 			pjb('#' + cur_id).fadeIn('slow');
 			
-			// @todo: add ACP option for all those spam ... I mean popup messages
 			<!-- IF PJB_POPUPS_ENABLE -->
 			pjB_output_info(success['SUCCESS_TITLE'], success['SUCCESS_MESSAGE'], true);
 			<!-- ENDIF -->
@@ -392,7 +390,7 @@ function pjB_login(data)
 		pjB_output_info('{L_LOGIN_LOGOUT}', data['SUCCESS'], true);
 		setTimeout (
 			'window.location="' + data['LINK'] + '";', 
-			3000 // 3 seconds until page reload
+			1000 // 1 second until page reload
 		);
 	}
 }
@@ -406,10 +404,12 @@ function pjB_login_template(data)
 {
 	message = data['TPL_BODY'];
 	
-	login_instance = pjb("#container").notify("create", {
+	login_instance = pjb("#container").notify("create",
+	{
 		title: "{L_LOGIN_LOGOUT}",
 		text: message
-	},{
+	},
+	{
 		expires: false
 	});
 	
@@ -427,9 +427,7 @@ function pjB_login_template(data)
 function pjB_check_pm(data)
 {
 	/*
-	* oh no, no error handling ...
-	* what did you expect? something like this?: "There was an error while trying to check for new PMs"
-	* exactly, totally useless error message ...
+	* no error handling ... it's not like anyone would care
 	*/
 	if(new_pm_count != data['NEW_PM_COUNT'] && data['NEW_PM_COUNT'] > 0 && data['NEW_PM'])
 	{
@@ -440,7 +438,7 @@ function pjB_check_pm(data)
 
 /**
 * creates a new jQuery UI notification message
-* DO NOT use this for error messages
+* @todo: create different design for errors
 *
 * @param (string) title = Title of the message
 * @param (string) message = Message that will be displayed
@@ -539,8 +537,8 @@ qe_bbtags = new Array('[b]','[/b]','[i]','[/i]','[u]','[/u]','[quote]','[/quote]
 *	Functions are based on the functions in editor.js of prosilver
 *	bbCode control by subBlue design [ www.subBlue.com ]
 *	Includes unixsafe colour palette selector by SHS`
-*	modified by Marc Alexander in order to work with jQuery Quick Edit
-*	modified by Marc Alexander: added jQuery functions
+*	modified by Marc Alexander:	- changed in order to work with jQuery Quick Edit
+*								- added jQuery functions
 */
 
 
