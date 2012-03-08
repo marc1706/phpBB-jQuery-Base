@@ -55,6 +55,7 @@ pjb(document).ready(function(){
 	});
 	<!-- ENDIF -->
 	
+	<!-- IF PJB_MARK_READ_ENABLE -->
 	// mark forums read
 	pjb('li.rightside a.markread').click(function() {
 		if(popup_open != true)
@@ -76,6 +77,8 @@ pjb(document).ready(function(){
 			return false;
 		}
 	});
+	<!-- ENDIF -->
+	
 	<!-- IF PJB_QUICKREPLY_ENABLE -->
 	// Quickreply
 	pjb('#qr_editor_div .button1').click(function(event) {

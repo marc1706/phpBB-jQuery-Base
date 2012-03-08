@@ -15,7 +15,7 @@
 				<email><![CDATA[admin@m-a-styles.de]]></email>
 			</author>
 		</author-group>
-		<mod-version>0.1.0</mod-version>
+		<mod-version>1.0.0</mod-version>
 		<installation>
 			<level>easy</level>
 			<time>300</time>
@@ -30,6 +30,30 @@
 		</link-group>
 		-->
 		<history>
+			<entry>
+				<date>2012-03-08</date>
+				<rev-version>1.0.0</rev-version>
+				<changelog lang="en">
+					<change>Purge caches via install script</change>
+					<change>Remove unneeded code from jquery_functions.php</change>
+					<change>Add ability to change interval for checking PMs via ACP interface</change>
+					<change>Fix unclean if-statements in jquery_base_header.html</change>
+					<change>Don't include pjB files if it's disabled via ACP</change>
+					<change>Don't remove phpBB's PM popup</change>
+					<change>Remove unneeded comments/code from jquery_base_header.html</change>
+					<change>Add changes in editor.js to jquery_base_header.html</change>
+				</changelog>
+				<changelog lang="de">
+					<change>Leere Caches mit dem Installer</change>
+					<change>Unnötigen Code von jquery_functions.php entfernt</change>
+					<change>Aktualisierungsintervall für PN Überprüfung kann im ACP eingestellt werden</change>
+					<change>Unsaubere if-Abfragen in jquery_base_header.html korrigiert</change>
+					<change>Binde pjB Dateien nicht ein, falls es im Admin-Bereich deaktiviert ist</change>
+					<change>Lösche phpBB's PN Popup nicht</change>
+					<change>Unnötige Kommentare und code von jquery_base_header.html entfernt</change>
+					<change>editor.js basierten Code aktualisiert</change>
+				</changelog>
+			</entry>
 			<entry>
 				<date>2012-02-26</date>
 				<rev-version>0.1.0</rev-version>
@@ -74,7 +98,8 @@
 	'PJB_QUICKEDIT_ENABLE' 	=> (isset($config['pjb_quickedit_enable']) && $config['pjb_quickedit_enable'] && $auth->acl_get('u_quickedit') && $config['pjb_enable']) ? true : false,
 	'PJB_QUICKREPLY_ENABLE' => (isset($config['pjb_quickreply_enable']) && $config['pjb_quickreply_enable'] && $auth->acl_get('u_quickreply') && $config['pjb_enable']) ? true : false,
 	'PJB_POPUPS_ENABLE'	=> (isset($config['pjb_popups_enable']) && $config['pjb_popups_enable'] && $config['pjb_enable']) ? true : false,
-	'PJB_PM_UPDATE_INTERVAL' => (isset($config['pjb_pm_update_interval']) && !empty($config['pjb_pm_update_interval']) && $config['pjb_enable']) ? $config['pjb_pm_update_interval'] : false,]]></action>
+	'PJB_PM_UPDATE_INTERVAL' => (isset($config['pjb_pm_update_interval']) && !empty($config['pjb_pm_update_interval']) && $config['pjb_enable']) ? $config['pjb_pm_update_interval'] : false,
+	'PJB_MARK_READ_ENABLE'	=> (isset($config['pjb_markread_enable']) && $config['pjb_markread_enable'] && $config['pjb_enable']) ? true : false,]]></action>
 			</edit>	
 		</open>
 		<open src="language/en/acp/styles.php">
