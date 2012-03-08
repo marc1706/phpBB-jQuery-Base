@@ -100,20 +100,20 @@ pjb(document).ready(function(){
 	});
 	<!-- ENDIF -->
 	
+	<!-- IF not S_USER_LOGGED_IN -->
 	// Quick Login
 	pjb('.icon-logout a').click(function(event) {
-		<!-- IF not S_USER_LOGGED_IN -->
 			event.preventDefault();
 			var data = 'mode=login&get_template=1';
 			pjB_do_ajax('login_template', data, true);
-		<!-- ENDIF -->
 	});
+	<!-- ENDIF -->
 	
 	// initialise jQuery UI notify widget
 	pjb("#container").notify();
 	
-	// show "new" PM popup
 	<!-- IF S_USER_PM_POPUP and S_NEW_PM -->
+	// show "new" PM popup
 	if(logged_in)
 	{
 		pjB_output_info('<a id="popupHeader" href="{U_PRIVATEMSGS}">{PRIVATE_MESSAGE_INFO}</a>', '{LA_YOU_NEW_PM}<br /><br /><a class="postlink" href="{U_PRIVATEMSGS}">{LA_PROFILE}</a>', false);
