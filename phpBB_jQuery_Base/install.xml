@@ -22,14 +22,16 @@
 			<time>300</time>
 			<target-version>3.0.10</target-version>
 		</installation>
-		<!--
 		<link-group>
+			<link type="contrib" href="contrib/update_010_to_100.xml" lang="en">Update 0.1.0 to 1.0.0</link>
+			<link type="contrib" href="contrib/update_010_to_100.xml" lang="de">Aktualisiere 0.1.0 zu 1.0.0</link>
+		<!--
 			<link type="contrib" href="contrib/Prime_Post_Revisions.xml" lang="en">Prime Post Revisions Add-On</link>
 			<link type="contrib" href="contrib/Prime_Post_Revisions.xml" lang="de">Prime Post Revisions Add-On</link>
 			<link type="language" href="contrib/de.xml" lang="en">German Language</link>
 			<link type="language" href="contrib/de.xml" lang="de">Deutsche Sprache</link>
-		</link-group>
 		-->
+		</link-group>
 		<history>
 			<entry>
 				<date>2012-03-08</date>
@@ -43,6 +45,9 @@
 					<change>Don't remove phpBB's PM popup</change>
 					<change>Remove unneeded comments/code from jquery_base_header.html</change>
 					<change>Add changes in editor.js to jquery_base_header.html</change>
+					<change>Fix: return_ary is not defined when using mark read</change>
+					<change>Fix: Mark read setting in ACP has no effect</change>
+					<change>Fix: Quick login setting in ACP has no effect</change>
 				</changelog>
 				<changelog lang="de">
 					<change>Leere Caches mit dem Installer</change>
@@ -53,6 +58,9 @@
 					<change>Lösche phpBB's PN Popup nicht</change>
 					<change>Unnötige Kommentare und code von jquery_base_header.html entfernt</change>
 					<change>editor.js basierten Code aktualisiert</change>
+					<change>Korrigiert: return_ary ist nicht definiert</change>
+					<change>Korrigiert: Einstellungen von "Mark Read" im Admin-Bereich haben keinen Effekt</change>
+					<change>Korrigiert:Quick Login Einstellungen im Admin-Bereich haben keinen Effekt</change>
 				</changelog>
 			</entry>
 			<entry>
@@ -203,18 +211,7 @@
 			</edit>
 		</open>
 		<php-installer>install/index.php</php-installer>
-		<diy-instructions lang="en">After editing all the files please do the following:
-
-Go to ACP->Styles->Templates-> And click "Refresh" for all your templates.
-Go to ACP->Styles->Themes-> And click "Refresh" for all your themes.
-Go to ACP->Styles->Imageset-> And click "Refresh" for all your imagesets.
-
-If you still do not see it, go to any topic and clear your browser cache.</diy-instructions>
-		<diy-instructions lang="de">Nach dem Editieren bitte noch folgendes ausführen:
-Gehe zu Admin-Bereich->Styles->Templates-> und klicke bei allen bearbeiteten Styles auf "Aktualisieren".
-Gehe zu Admin-Bereich->Styles->Themes-> und klicke bei allen bearbeiteten Styles auf "Aktualisieren".
-Gehe zu Admin-Bereich->Styles->Imageset-> und klicke bei allen bearbeiteten Styles auf "Aktualisieren".
-
-Wenn du immer noch nichts siehts, öffne irgendein beliebiges Thema und leere dort deinen Browser-Cache.</diy-instructions>
+		<diy-instructions lang="en">Please run the installer after editing all files.</diy-instructions>
+		<diy-instructions lang="de">Bitte führe den Installer nach dem Editieren aller Dateien aus.</diy-instructions>
 	</action-group>
 </mod>

@@ -22,6 +22,10 @@
 			<time>300</time>
 			<target-version>3.0.10</target-version>
 		</installation>
+		<link-group>
+			<link type="parent" href="../install.xml" lang="en">Install instructions</link>
+			<link type="parent" href="../install.xml" lang="de">Installationsanleitung</link>
+		</link-group>
 	</header>
 	<action-group>
 		<copy>
@@ -84,18 +88,7 @@
 			</edit>
 		</open>
 		<php-installer>install/index.php</php-installer>
-		<diy-instructions lang="en">After editing all the files please do the following:
-
-Go to ACP->Styles->Templates-> And click "Refresh" for all your templates.
-Go to ACP->Styles->Themes-> And click "Refresh" for all your themes.
-Go to ACP->Styles->Imageset-> And click "Refresh" for all your imagesets.
-
-If you still do not see it, go to any topic and clear your browser cache.</diy-instructions>
-		<diy-instructions lang="de">Nach dem Editieren bitte noch folgendes ausführen:
-Gehe zu Admin-Bereich->Styles->Templates-> und klicke bei allen bearbeiteten Styles auf "Aktualisieren".
-Gehe zu Admin-Bereich->Styles->Themes-> und klicke bei allen bearbeiteten Styles auf "Aktualisieren".
-Gehe zu Admin-Bereich->Styles->Imageset-> und klicke bei allen bearbeiteten Styles auf "Aktualisieren".
-
-Wenn du immer noch nichts siehts, öffne irgendein beliebiges Thema und leere dort deinen Browser-Cache.</diy-instructions>
+		<diy-instructions lang="en">Please run the installer after editing all files.</diy-instructions>
+		<diy-instructions lang="de">Bitte führe den Installer nach dem Editieren aller Dateien aus.</diy-instructions>
 	</action-group>
 </mod>
