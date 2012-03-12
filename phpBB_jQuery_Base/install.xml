@@ -34,7 +34,7 @@
 		</link-group>
 		<history>
 			<entry>
-				<date>2012-03-08</date>
+				<date>2012-03-12</date>
 				<rev-version>1.0.0</rev-version>
 				<changelog lang="en">
 					<change>Purge caches via install script</change>
@@ -48,6 +48,7 @@
 					<change>Fix: return_ary is not defined when using mark read</change>
 					<change>Fix: Mark read setting in ACP has no effect</change>
 					<change>Fix: Quick login setting in ACP has no effect</change>
+					<change>Fix: Possible XSS exploit due to using {L_ instead of {LA_</change>
 				</changelog>
 				<changelog lang="de">
 					<change>Leere Caches mit dem Installer</change>
@@ -60,7 +61,8 @@
 					<change>editor.js basierten Code aktualisiert</change>
 					<change>Korrigiert: return_ary ist nicht definiert</change>
 					<change>Korrigiert: Einstellungen von "Mark Read" im Admin-Bereich haben keinen Effekt</change>
-					<change>Korrigiert:Quick Login Einstellungen im Admin-Bereich haben keinen Effekt</change>
+					<change>Korrigiert: Quick Login Einstellungen im Admin-Bereich haben keinen Effekt</change>
+					<change>Korrigiert: Mögliches cross-site scripting, da {L_ statt {LA_ verwendet wurde</change>
 				</changelog>
 			</entry>
 			<entry>

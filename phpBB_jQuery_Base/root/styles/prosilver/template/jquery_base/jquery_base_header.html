@@ -390,7 +390,7 @@ function pjB_login(data)
 	}
 	else
 	{
-		pjB_output_info('{L_LOGIN_LOGOUT}', data['SUCCESS'], true);
+		pjB_output_info('{LA_LOGIN_LOGOUT}', data['SUCCESS'], true);
 		setTimeout (
 			'window.location="' + data['LINK'] + '";', 
 			1000 // 1 second until page reload
@@ -409,7 +409,7 @@ function pjB_login_template(data)
 	
 	login_instance = pjb("#container").notify("create",
 	{
-		title: "{L_LOGIN_LOGOUT}",
+		title: "{LA_LOGIN_LOGOUT}",
 		text: message
 	},
 	{
