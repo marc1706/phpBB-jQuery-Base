@@ -1458,7 +1458,7 @@ class phpbb_jquery_base
 				'POSTER_WARNINGS'	=> $user_cache[$poster_id]['warnings'],
 				'POSTER_AGE'		=> $user_cache[$poster_id]['age'],
 
-				'POST_DATE'			=> $user->format_date($row['post_time'], false, ($view == 'print') ? true : false),
+				'POST_DATE'			=> $user->format_date($data['post_time'], false, ($view == 'print') ? true : false),
 				'POST_SUBJECT'		=> $data['post_subject'],
 				'MESSAGE'			=> $message,
 				'SIGNATURE'			=> ($row['enable_sig']) ? $user_cache[$poster_id]['sig'] : '',

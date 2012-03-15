@@ -34,7 +34,7 @@
 		</link-group>
 		<history>
 			<entry>
-				<date>2012-03-12</date>
+				<date>2012-03-15</date>
 				<rev-version>1.0.0</rev-version>
 				<changelog lang="en">
 					<change>Purge caches via install script</change>
@@ -49,6 +49,7 @@
 					<change>Fix: Mark read setting in ACP has no effect</change>
 					<change>Fix: Quick login setting in ACP has no effect</change>
 					<change>Fix: Possible XSS exploit due to using {L_ instead of {LA_</change>
+					<change>Fix: Incorrect post time displayed after quickreply</change>
 				</changelog>
 				<changelog lang="de">
 					<change>Leere Caches mit dem Installer</change>
@@ -63,6 +64,7 @@
 					<change>Korrigiert: Einstellungen von "Mark Read" im Admin-Bereich haben keinen Effekt</change>
 					<change>Korrigiert: Quick Login Einstellungen im Admin-Bereich haben keinen Effekt</change>
 					<change>Korrigiert: Mögliches cross-site scripting, da {L_ statt {LA_ verwendet wurde</change>
+					<change>Korrigiert: Falsches Datum eines Beitrags nach Verwendung der Schnellantwort</change>
 				</changelog>
 			</entry>
 			<entry>
