@@ -129,7 +129,8 @@
 			<edit>
 				<find><![CDATA[	'YOU_NO_NEW_PM'		=> 'No new private messages are waiting for you.',]]></find>
 				<action type="after-add"><![CDATA[	'acl_u_quickreply'	=> array('lang' => 'Can use the jQuery-based Quickreply', 'cat' => 'misc'),
-	'acl_u_quickedit'	=> array('lang' => 'Can use the jQuery-based Quickedit', 'cat' => 'misc'),]]></action>
+	'acl_u_quickedit'	=> array('lang' => 'Can use the jQuery-based Quickedit', 'cat' => 'misc'),
+	'QUICKEDIT_POST'					=> 'Quickedit post',]]></action>
 			</edit>
 		</open>
 		<open src="styles/prosilver/imageset/en/imageset.cfg">
