@@ -41,8 +41,8 @@ $lang = array_merge($lang, array(
 	'ACP_JQUERY_QUICKREPLY_ENABLE'		=> 'Enable Quickreply',
 	'ACP_JQUERY_QUICKEDIT_ENABLE'		=> 'Enable Quickedit',
 	'ACP_JQUERY_MARKREAD_ENABLE'		=> 'Enable marking topics & forums read',
-	'ACP_JQUERY_LOGIN_ENABLE'			=> 'Enable login & logout using jQuery',
-	'ACP_JQUERY_POPUP_ENABLE'			=> 'Enable popup "success" messages',
+	'ACP_JQUERY_LOGIN_ENABLE'			=> 'Enable login &amp; logout using jQuery',
+	'ACP_JQUERY_POPUP_ENABLE'			=> 'Enable popup “success“ messages',
 	'ACP_JQUERY_POPUP_ENABLE_EXP'		=> 'This will show popup messages after you have run any action, i.e. after a quickreply you will see a popup message stating that your quickreply was successful.',
 	'ACP_JQUERY_UPDATE_INTERVAL'		=> 'Update interval for checking new PMs',
 	'ACP_JQUERY_UPDATE_INTERVAL_EXP'	=> 'Define the time in minutes after which the PM check should check for new PMs. Setting this to 0 will disable this feature.',
@@ -62,9 +62,4 @@ $lang = array_merge($lang, array(
 	'RELEASE_ANNOUNCEMENT'	=> 'Annoucement Topic',
 	'UP_TO_DATE'			=> '%s is up to date',
 	'VERSION_CHECK'			=> 'MOD Version Check',
-	/*
-	// Adding the permissions
-	'acl_a_manage_portal'		=> array('lang' => 'Can alter Portal settings', 'cat' => 'misc'),
-	'acl_u_view_portal'			=> array('lang' => 'Can view the Portal', 'cat' => 'misc'),
-	*/
 ));
