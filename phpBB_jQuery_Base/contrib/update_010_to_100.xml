@@ -7,7 +7,7 @@
 		<license><![CDATA[http://opensource.org/licenses/gpl-license.php GNU General Public License v2]]></license>
 		<title lang="en"><![CDATA[phpBB jQuery Base - Update 0.1.0 to 1.0.0]]></title>
 		<description lang="en"><![CDATA[This will update phpBB jQuery Base from version 0.1.0 to 1.0.0.]]></description>
-		<author-notes lang="en">This MOD requires PHP5.</author-notes>
+		<author-notes lang="en">This MOD requires PHP 5.2.0 or newer and PECL json 1.2.0 or newer.</author-notes>
 		<author-group>
 			<author>
 				<realname><![CDATA[Marc Alexander]]></realname>
@@ -20,7 +20,7 @@
 		<installation>
 			<level>easy</level>
 			<time>300</time>
-			<target-version>3.0.10</target-version>
+			<target-version>3.0.11</target-version>
 		</installation>
 		<link-group>
 			<link type="parent" href="../install.xml" lang="en">Install instructions</link>
@@ -88,7 +88,7 @@
 			</edit>
 		</open>
 		<php-installer>install/index.php</php-installer>
-		<diy-instructions lang="en">Please run the installer after editing all files.</diy-instructions>
-		<diy-instructions lang="de">Bitte führe den Installer nach dem Editieren aller Dateien aus.</diy-instructions>
+		<diy-instructions lang="en">Please run the installer after editing all files. Remove the installer afterwards.</diy-instructions>
+		<diy-instructions lang="de">Bitte führe den Installer nach dem Editieren aller Dateien aus. Lösche den Installer anschließend.</diy-instructions>
 	</action-group>
 </mod>

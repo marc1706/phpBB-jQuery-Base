@@ -7,7 +7,7 @@
 		<license><![CDATA[http://opensource.org/licenses/gpl-license.php GNU General Public License v2]]></license>
 		<title lang="en"><![CDATA[phpBB jQuery Base]]></title>
 		<description lang="en"><![CDATA[This will add a jQuery Back-End to your forum, enabling you to use jQuery for several features of your forum.]]></description>
-		<author-notes lang="en">This MOD requires PHP5.</author-notes>
+		<author-notes lang="en">This MOD requires PHP 5.2.0 or newer and PECL json 1.2.0 or newer.</author-notes>
 		<author-group>
 			<author>
 				<realname><![CDATA[Marc Alexander]]></realname>
@@ -20,7 +20,7 @@
 		<installation>
 			<level>easy</level>
 			<time>300</time>
-			<target-version>3.0.10</target-version>
+			<target-version>3.0.11</target-version>
 		</installation>
 		<link-group>
 			<link type="contrib" href="contrib/update_010_to_100.xml" lang="en">Update 0.1.0 to 1.0.0</link>
@@ -34,7 +34,7 @@
 		</link-group>
 		<history>
 			<entry>
-				<date>2012-03-15</date>
+				<date>2012-10-14</date>
 				<rev-version>1.0.0</rev-version>
 				<changelog lang="en">
 					<change>Purge caches via install script</change>
