@@ -50,6 +50,8 @@
 					<change>Fix: Quick login setting in ACP has no effect</change>
 					<change>Fix: Possible XSS exploit due to using {L_ instead of {LA_</change>
 					<change>Fix: Incorrect post time displayed after quickreply</change>
+					<change>Replace double quote and ampersand with correct character</change>
+					<change>Fix: Missing language variable L_QUICKEDIT_POST</change>
 				</changelog>
 				<changelog lang="de">
 					<change>Leere Caches mit dem Installer</change>
@@ -65,6 +67,8 @@
 					<change>Korrigiert: Quick Login Einstellungen im Admin-Bereich haben keinen Effekt</change>
 					<change>Korrigiert: Mögliches cross-site scripting, da {L_ statt {LA_ verwendet wurde</change>
 					<change>Korrigiert: Falsches Datum eines Beitrags nach Verwendung der Schnellantwort</change>
+					<change>Ersetze Anführungsstriche und Et-Zeichen mit korrekten Zeichen</change>
+					<change>Korrigiert: Fehlende Sprachvariable L_QUICKEDIT_POST</change>
 				</changelog>
 			</entry>
 			<entry>
