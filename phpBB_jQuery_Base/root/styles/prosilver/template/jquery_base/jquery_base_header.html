@@ -127,7 +127,7 @@ pjb(document).ready(function(){
 	}
 	<!-- ENDIF -->
 	
-	<!-- IF PJB_PM_UPDATE_INTERVAL -->
+	<!-- IF PJB_PM_UPDATE_INTERVAL and S_USER_PM_POPUP -->
 	/* 
 	* check for new PMs every {PJB_PM_UPDATE_INTERVAL} minutes
 	*/
@@ -359,7 +359,7 @@ function quickreply(success)
 				{
 					cur_location = pjb(location).attr('href');
 					data = 'mode=quickedit&qe_mode=init&post_id=' + post_id + '&location=' + location;
-					pjB_do_ajax('open', data, false);
+					pjB_do_ajax('open', data, true);
 					popup_open = true;
 					cur_post_id = post_id;
 				}
