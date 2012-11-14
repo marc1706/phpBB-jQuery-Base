@@ -16,23 +16,27 @@
 				<email><![CDATA[admin@m-a-styles.de]]></email>
 			</author>
 		</author-group>
-		<mod-version>1.0.0</mod-version>
+		<mod-version>1.0.1</mod-version>
 		<installation>
 			<level>easy</level>
 			<time>300</time>
 			<target-version>3.0.11</target-version>
 		</installation>
 		<link-group>
-			<link type="contrib" href="contrib/update_010_to_100.xml" lang="en">Update 0.1.0 to 1.0.0</link>
-			<link type="contrib" href="contrib/update_010_to_100.xml" lang="de">Aktualisiere 0.1.0 zu 1.0.0</link>
-		<!--
-			<link type="contrib" href="contrib/Prime_Post_Revisions.xml" lang="en">Prime Post Revisions Add-On</link>
-			<link type="contrib" href="contrib/Prime_Post_Revisions.xml" lang="de">Prime Post Revisions Add-On</link>
-			<link type="language" href="contrib/de.xml" lang="en">German Language</link>
-			<link type="language" href="contrib/de.xml" lang="de">Deutsche Sprache</link>
-		-->
+			<link type="contrib" href="contrib/update_010_to_101.xml" lang="en">Update 0.1.0 to 1.0.1</link>
+			<link type="contrib" href="contrib/update_010_to_101.xml" lang="de">Aktualisiere 0.1.0 zu 1.0.1</link>
 		</link-group>
 		<history>
+			<entry>
+				<date>2012-11-14</date>
+				<rev-version>1.0.1</rev-version>
+				<changelog lang="en">
+					<change>Fixup javascript behavior </change>
+				</changelog>
+				<changelog lang="de">
+					<change>Korrigiere das Verhalten des Javascript codes</change>
+				</changelog>
+			</entry>
 			<entry>
 				<date>2012-10-14</date>
 				<rev-version>1.0.0</rev-version>
