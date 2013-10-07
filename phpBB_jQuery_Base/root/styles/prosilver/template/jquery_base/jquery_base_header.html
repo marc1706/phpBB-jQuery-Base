@@ -36,6 +36,7 @@ var pjb = jQuery.noConflict();
 * functions that need to be executed after the page has finished loading
 */
 
+<!-- IF not S_BOARD_DISABLED -->
 pjb(document).ready(function(){
 	<!-- IF PJB_QUICKEDIT_ENABLE -->
 	// quickedit
@@ -135,8 +136,8 @@ pjb(document).ready(function(){
 		pjB_do_ajax('check_pm', 'mode=check_pm', true);
 	}, 1000 * 60 * {PJB_PM_UPDATE_INTERVAL}); // 1000 ms * 60 = 60 s * X = X minutes
 	<!-- ENDIF -->
-
 });
+<!-- ENDIF -->
 
 /*
 * Onclick functions for BBCode buttons
