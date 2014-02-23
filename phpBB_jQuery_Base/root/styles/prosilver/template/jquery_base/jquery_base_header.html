@@ -204,8 +204,8 @@ function bind_quickedit_buttons()
 		
 		// hide login body
 		login_instance.close();
-		
-		var data = 'mode=login&' + user + '&' + password + '&location=' + location;
+
+		var data = 'mode=login&' + user + '&' + password + '&location=' + encodeURIComponent(cur_location);
 		login_open = false;
 		pjB_do_ajax('login', data, true);
 	});
@@ -393,7 +393,7 @@ function pjB_login(data)
 	{
 		pjB_output_info('{LA_LOGIN_LOGOUT}', data['SUCCESS'], true);
 		setTimeout (
-			'window.location="' + data['LINK'] + '";', 
+			'window.location="' + data['LINK'].split('&amp;').join('&') + '";',
 			1000 // 1 second until page reload
 		);
 	}
