@@ -18,7 +18,7 @@ include($phpbb_root_path . 'common.'.$phpEx);
 include($phpbb_root_path . 'jquery_base/jquery_functions.' . $phpEx);
 
 // Start session management
-$user->session_begin();
+$user->session_begin(false);
 $auth->acl($user->data);
 $user->setup('posting');
 $user->add_lang('mods/jquery_base');
