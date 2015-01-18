@@ -133,7 +133,9 @@ pjb(document).ready(function(){
 	* check for new PMs every {PJB_PM_UPDATE_INTERVAL} minutes
 	*/
 	setInterval(function() {
-		pjB_do_ajax('check_pm', 'mode=check_pm', true);
+		if (document.hasFocus()) {
+			pjB_do_ajax('check_pm', 'mode=check_pm', true);
+		}
 	}, 1000 * 60 * {PJB_PM_UPDATE_INTERVAL}); // 1000 ms * 60 = 60 s * X = X minutes
 	<!-- ENDIF -->
 });
