@@ -201,11 +201,12 @@ function bind_quickedit_buttons()
 		cur_location = pjb(location).attr('href');
 		user = pjb('#pjb-login #username').serialize();
 		password = pjb('#pjb-login #password').serialize();
-		
+		autologin = (pjb('#pjb-login input[name=autologin]').val() === 'on') ? '&autologin=1' : '';
+
 		// hide login body
 		login_instance.close();
 
-		var data = 'mode=login&' + user + '&' + password + '&location=' + encodeURIComponent(cur_location);
+		var data = 'mode=login&' + user + '&' + password + autologin + '&location=' + encodeURIComponent(cur_location);
 		login_open = false;
 		pjB_do_ajax('login', data, true);
 	});
